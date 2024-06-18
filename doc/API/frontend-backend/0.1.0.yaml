@@ -1,0 +1,328 @@
+openapi: 3.1.0
+info:
+  title: 操作层主控端 API
+  version: 0.1.0
+externalDocs:
+  description: 面向高级模型用户的 CV 模型应用管理平台设计API
+  url: https://github.com/4kliksAlex/CV-WEB/blob/main/doc/%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1.md
+# tags:
+#   - name: pet
+#     description: Everything about your Pets
+#     externalDocs:
+#       description: Find out more
+#       url: http://swagger.io
+#   - name: store
+#     description: Access to Petstore orders
+#     externalDocs:
+#       description: Find out more about our store
+#       url: http://swagger.io
+#   - name: user
+#     description: Operations about user
+paths:
+  /project/directory:
+    get:
+      tags:
+        - 超级无敌初始化
+      summary: 请求项目文件目录
+      responses:
+        '200':
+          description: 返回项目文件目录
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /strategy-registry:
+    get:
+      tags:
+        - 管理层初始化
+      summary: 请求策略注册表
+      responses:
+        '200':
+          description: 发送策略注册表
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /config/file-path:
+    post:
+      tags:
+        - 管理层初始化
+      summary: 发送配置文件路径
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: 发送配置表单
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /config-form:
+    post:
+      tags:
+        - 管理层初始化
+      summary: 发送修改后的配置表单
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: 配置表单已保存
+
+  /resource/file-path:
+    post:
+      tags:
+        - 管理层初始化
+      summary: 发送资源文件路径
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: 资源文件路径已保存
+
+  /sync-config-form:
+    get:
+      tags:
+        - 中间我也不知道分组的可选步骤
+      summary: 请求同步配置表单
+      responses:
+        '200':
+          description: 发送配置表单
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /data/file-path:
+    post:
+      tags:
+        - 中间我也不知道分组的可选步骤
+      summary: 发送数据文件路径
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: 数据文件路径已接收
+
+  /render/strategy:
+    post:
+      tags:
+        - 中间我也不知道分组的可选步骤
+        - 数据预处理
+        - 模型推理
+      summary: 发送渲染策略
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: 发送渲染结果
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /preprocessing-data/directory:
+    get:
+      tags:
+        - 数据预处理
+      summary: 查询预处理数据文件目录
+      responses:
+        '200':
+          description: 返回预处理数据文件目录
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+    post:
+      tags:
+        - 数据预处理
+      summary: 发送预处理数据文件目录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+      responses:
+        '200':
+          description: 返回预处理数据文件目录
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /preprocessing/strategy:
+    post:
+      tags:
+        - 数据预处理
+      summary: 发送预处理策略队列
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+      responses:
+        '200':
+          description: 预处理策略队列已接收
+
+  /training-data/directory:
+    get:
+      tags:
+        - 模型训练
+      summary: 查询训练数据目录
+      responses:
+        '200':
+          description: 返回训练数据目录
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+    post:
+      tags:
+        - 模型训练
+      summary: 发送训练数据目录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+      responses:
+        '200':
+          description: 返回训练数据目录
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /model-training:
+    post:
+      tags:
+        - 模型训练
+      summary: 发送模型训练策略执行请求
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: 训练信息
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /model-resource/file-path:
+    post:
+      tags:
+        - 模型推理
+        - 模型训练
+      summary: 发送模型资源文件路径
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: 模型资源文件路径已接收
+
+  /inference-data/directory:
+    get:
+      tags:
+        - 模型推理
+      summary: 查询推理数据目录
+      responses:
+        '200':
+          description: 返回推理数据目录
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+    post:
+      tags:
+        - 模型推理
+      summary: 发送推理数据目录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+      responses:
+        '200':
+          description: 返回推理数据目录
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /inference/strategy:
+    post:
+      tags:
+        - 模型推理
+      summary: 请求执行推理策略
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: 推理信息
+          content:
+            application/json:
+              schema:
+                type: object
