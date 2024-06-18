@@ -1,0 +1,279 @@
+@startuml aliu
+
+actor 用户
+box "前端" #LightBlue
+participant "前端" as Frontend
+end box
+' ^(?!.*Frontend).*-.*$\n
+
+box "操作层" #LightYellow
+participant "操作层主控端" as OperationModule
+
+participant "数据预处理模块" as PreprocessModule
+participant "模型推理模块" as InferenceModule
+participant "模型训练模块" as TrainingModule
+end box
+
+box "管理层" #Pink
+participant "管理层主控端" as ManagementModule
+
+participant "配置文件管理器" as ConfigModule
+participant "资源文件管理器" as ResourceModule
+participant "策略文件管理器" as StrategyModule
+end box
+
+box "用户文件" #D9F2D0
+boundary "配置文件" as ConfigFile
+boundary "资源文件" as ResourceFile
+boundary "策略文件" as StrategyFile
+end box
+
+用户 -> Frontend: 访问平台
+
+Frontend -> OperationModule: [GET]请求项目文件目录
+OperationModule -> ManagementModule: [GET]请求项目文件目录
+ManagementModule --> OperationModule: 返回项目文件目录
+OperationModule --> Frontend: 返回项目文件目录
+
+group 管理层初始化
+    group 策略管理器初始化
+        Frontend -> OperationModule: [GET]请求策略注册表
+        OperationModule -> ManagementModule: [GET]请求策略注册表
+        ManagementModule -> StrategyModule: 实例化策略管理模块
+        StrategyModule -> StrategyFile: 注册策略函数
+        StrategyModule -> ManagementModule: 返回策略注册表
+        ManagementModule --> OperationModule: 发送策略注册表
+        OperationModule --> Frontend: 发送策略注册表
+        Frontend --> 用户: 显示策略注册表
+    end
+    group 配置管理器初始化
+        用户 -> Frontend: 选择配置文件路径
+        Frontend -> OperationModule: [POST]发送配置文件路径
+        OperationModule -> ManagementModule: [POST]发送配置文件路径
+        ManagementModule -> ConfigModule: 实例化配置文件管理器
+        ConfigModule -> ConfigFile: 读取配置文件
+        ConfigModule -> ManagementModule: 返回解析后的配置文件内容
+        ManagementModule --> OperationModule: 发送配置表单
+        OperationModule --> Frontend: 发送配置表单
+
+        opt 用户修改配置
+            用户 -> Frontend: 修改配置表单
+            Frontend -> OperationModule: [POST]发送修改后的配置表单
+            OperationModule -> ManagementModule: [POST]发送修改后的配置表单
+            ManagementModule -> ConfigModule: 修改配置表单
+            alt 用户选择保存配置文件
+                ConfigModule -> ConfigFile: 创建新配置文件并写入
+            else 用户选择覆盖配置文件
+                ConfigModule -> ConfigFile: 写入修改后的配置文件
+            end
+        end
+    end
+    group 资源管理器初始化
+        alt 配置文件不包含资源文件路径
+            用户 -> Frontend: 选择资源文件路径
+            Frontend -> OperationModule: [POST]发送资源文件路径
+            OperationModule -> ManagementModule: [POST]发送资源文件路径
+            ManagementModule -> ConfigModule: 添加配置表项
+            ConfigModule -> ConfigFile: 写入配置文件
+        end
+        ManagementModule -> ResourceModule: 实例化资源文件管理器
+        ResourceModule -> ConfigModule: 读取配置信息
+        ResourceModule -> ResourceFile: 链接资源文件
+    end
+end
+opt 前端请求同步配置表单
+    Frontend -> OperationModule: [GET]请求同步配置表单
+    OperationModule -> ManagementModule: [GET]请求同步配置表单
+    ManagementModule -> ConfigModule: 调用配置文件管理器
+    ConfigModule -> ConfigFile: 读取配置文件
+    ConfigModule -> ManagementModule: 返回配置表单
+    ManagementModule --> OperationModule: 发送配置表单
+    OperationModule --> Frontend: 发送配置表单
+end
+opt 用户预览数据
+    用户 -> Frontend: 选择数据文件
+    Frontend -> OperationModule: [POST]发送数据文件路径
+    OperationModule -> ManagementModule: [POST]发送数据文件路径
+    ManagementModule -> ResourceModule: 调用资源文件管理器
+    ResourceModule -> ResourceFile: 读取数据文件
+    ResourceModule -> ManagementModule: 返回数据文件
+
+    alt 用户选择渲染策略
+        用户 -> Frontend: 选择渲染策略
+        Frontend -> OperationModule: [POST]发送渲染策略
+        OperationModule -> ManagementModule: [POST]发送渲染策略
+        ManagementModule -> StrategyModule: 调用策略管理器
+        StrategyModule -> ManagementModule: 返回渲染结果
+        ManagementModule --> OperationModule: 发送渲染结果
+        OperationModule --> Frontend: 发送渲染结果
+    else 使用前端框架原生渲染策略
+        ManagementModule --> OperationModule: 发送数据
+        OperationModule --> Frontend: 发送数据
+        Frontend --> 用户: 使用前端框架原生渲染策略
+    end
+    用户 -> Frontend: 选择展示方式
+    Frontend --> 用户: 展示数据
+end
+group 数据预处理
+    用户 -> Frontend: 选择预处理策略
+    Frontend --> Frontend: 记录预处理策略队列
+
+    用户 -> Frontend: 查看预处理数据文件目录
+    Frontend -> OperationModule: [GET]查询预处理数据文件目录
+    OperationModule -> ManagementModule: [GET]查询预处理数据文件目录
+
+    ManagementModule --> OperationModule: 返回预处理数据文件目录
+    OperationModule --> Frontend: 返回预处理数据文件目录
+    opt 用户修改预处理文件目录
+        用户 -> Frontend: 选择预处理数据文件目录
+        Frontend -> OperationModule: [POST]发送预处理数据文件目录
+        OperationModule -> ManagementModule: [POST]发送预处理数据文件目录
+        ManagementModule --> OperationModule: 返回预处理数据文件目录
+        OperationModule --> Frontend: 返回预处理数据文件目录
+    end
+
+    用户 -> Frontend: 执行预处理策略
+    Frontend -> OperationModule: [POST]发送预处理策略队列
+    OperationModule -> PreprocessModule: 调用预处理策略模块
+    PreprocessModule -> ManagementModule: [POST]发送预处理策略队列
+    ManagementModule -> ResourceModule: 调用资源文件管理器
+    ResourceModule -> StrategyModule : 调用资源集策略
+    StrategyModule -> ResourceFile: 读取资源文件
+    StrategyModule -> ResourceModule: 返回资源集
+    ResourceModule -> ManagementModule: 返回资源迭代器
+    loop 数据预处理
+        ManagementModule -> StrategyModule: 调用预处理策略
+        StrategyModule -> ManagementModule: 返回预处理结果
+        alt 用户选择保存结果
+            ManagementModule -> ResourceModule: 调用资源文件管理器
+            ResourceModule -> ResourceFile: 保存预处理结果
+        else 用户选择不保存结果
+            
+            alt 用户选择渲染策略
+                用户 -> Frontend: 选择渲染策略
+                Frontend -> OperationModule: [POST]发送渲染策略
+                OperationModule -> ManagementModule: [POST]发送渲染策略
+                ManagementModule -> StrategyModule: 调用策略管理器
+                StrategyModule -> ManagementModule: 返回渲染结果
+                ManagementModule --> OperationModule: 发送渲染结果
+                OperationModule --> Frontend: 发送渲染结果
+            else 使用前端框架原生渲染策略
+                ManagementModule --> PreprocessModule: 发送预处理结果
+                PreprocessModule -> OperationModule: 返回预处理结果
+                OperationModule --> Frontend: 发送预处理结果
+                Frontend --> 用户: 使用前端框架原生渲染策略
+            end
+            用户 -> Frontend: 选择展示方式
+            Frontend --> 用户: 展示数据
+        end
+        ManagementModule --> PreprocessModule: 发送预处理日志
+        PreprocessModule -> OperationModule: 解析预处理日志，返回预处理信息
+        OperationModule --> Frontend: 发送预处理信息
+        Frontend --> 用户: 显示预处理信息
+    end
+end
+group 模型训练
+    用户 -> Frontend: 查看训练数据目录
+    Frontend -> OperationModule: [GET]查询训练数据目录
+    OperationModule -> ManagementModule: [GET]查询训练数据目录
+    ManagementModule --> OperationModule: 返回训练数据目录
+    OperationModule --> Frontend: 返回训练数据目录
+    opt 用户修改训练数据目录
+        用户 -> Frontend: 选择训练数据目录
+        Frontend -> OperationModule: [POST]发送训练数据目录
+        OperationModule -> ManagementModule: [POST]发送训练数据目录
+        ManagementModule --> OperationModule: 返回训练数据目录
+        OperationModule --> Frontend: 返回训练数据目录
+    end
+    用户 -> Frontend: 执行模型训练策略
+    Frontend -> OperationModule: [GET]发送模型训练策略执行请求
+    OperationModule -> TrainingModule: 调用模型训练策略模块
+    TrainingModule -> ManagementModule: [GET]请求执行模型训练
+
+    ManagementModule -> ResourceModule: 调用资源文件管理器
+    ResourceModule -> StrategyModule : 调用资源集策略
+    StrategyModule -> ResourceFile: 读取资源文件
+    StrategyModule -> ResourceModule: 返回资源集
+    ResourceModule -> ManagementModule: 返回资源迭代器
+
+    alt 用户选择模型资源文件
+        用户 -> Frontend: 选择模型资源文件
+        Frontend -> OperationModule: [POST]发送模型资源文件路径
+        OperationModule -> ManagementModule: [POST]发送模型资源文件路径
+        ManagementModule -> ConfigModule: 添加模型资源文件路径
+        ConfigModule -> ConfigFile: 写入配置文件
+    end
+    ResourceModule -> ConfigModule: 读取配置信息
+    ResourceModule -> ResourceFile: 读取资源文件
+    ResourceModule -> ManagementModule: 返回模型实例
+
+    loop 模型训练 
+        ManagementModule -> StrategyModule: 调用训练策略
+        ManagementModule -> ResourceModule: 调用资源文件管理器
+        ResourceModule -> ResourceFile: 保存训练结果
+        ManagementModule --> TrainingModule: 发送训练日志
+        TrainingModule -> OperationModule: 解析训练日志，返回训练信息
+        OperationModule --> Frontend: 发送训练信息
+        Frontend --> 用户: 显示训练信息
+    end
+end
+
+group 模型推理
+    opt 用户选择模型资源文件
+        用户 -> Frontend: 选择模型资源文件
+        Frontend -> OperationModule: [POST]发送模型资源文件路径
+        OperationModule -> ManagementModule: [POST]发送模型资源文件路径
+        ManagementModule -> ConfigModule: 添加模型资源文件路径
+        ConfigModule -> ConfigFile: 写入配置文件
+    end
+    用户 -> Frontend: 查看推理数据目录
+    Frontend -> OperationModule: [GET]查询推理数据目录
+    OperationModule -> ManagementModule: [GET]查询推理数据目录
+    ManagementModule --> OperationModule: 返回推理数据目录
+    OperationModule --> Frontend: 返回推理数据目录
+    opt 用户修改推理数据目录
+        用户 -> Frontend: 选择推理数据目录
+        Frontend -> OperationModule: [POST]发送推理数据目录
+        OperationModule -> ManagementModule: [POST]发送推理数据目录
+        ManagementModule --> OperationModule: 返回推理数据目录
+        OperationModule --> Frontend: 返回推理数据目录
+    end
+    用户 -> Frontend: 执行模型推理策略
+    Frontend -> OperationModule: [GET]请求执行推理策略
+    OperationModule -> InferenceModule: 调用模型推理策略模块
+    InferenceModule -> ManagementModule: [GET]请求执行推理策略
+    ManagementModule -> ResourceModule: 调用资源文件管理器
+    ResourceModule -> ConfigModule : 读取配置信息
+    ResourceModule -> StrategyModule : 调用资源集策略
+    StrategyModule -> ResourceFile: 读取资源文件
+    StrategyModule -> ResourceModule: 返回资源集
+    ResourceModule -> ManagementModule: 创建并返回资源迭代器
+    loop 模型推理
+        ManagementModule -> StrategyModule: 调用推理策略
+        ManagementModule -> ResourceModule: 调用资源文件管理器
+        ResourceModule -> ResourceFile: 保存推理结果
+        opt 用户预览推理结果
+            alt 用户选择渲染策略
+                ' (?<=-.*Frontend.*)\[\w+\]
+                用户 -> Frontend: 选择渲染策略
+                Frontend -> OperationModule: [POST]发送渲染策略
+                OperationModule -> ManagementModule: [POST]发送渲染策略
+                ManagementModule -> StrategyModule: 调用策略管理器
+                StrategyModule -> ManagementModule: 返回渲染结果
+                ManagementModule --> OperationModule: 发送渲染结果
+                OperationModule --> Frontend: 发送渲染结果
+            else 使用前端框架原生渲染策略
+                ManagementModule --> OperationModule: 发送数据
+                OperationModule --> Frontend: 发送数据
+                Frontend --> 用户: 使用前端框架原生渲染策略
+            end
+            用户 -> Frontend: 选择展示方式
+            Frontend --> 用户: 展示数据
+        end
+        ManagementModule --> InferenceModule: 发送推理日志
+        InferenceModule -> OperationModule: 解析推理日志，返回推理信息
+        OperationModule --> Frontend: 发送推理信息
+        Frontend --> 用户: 显示推理信息
+    end 
+end
+@enduml
