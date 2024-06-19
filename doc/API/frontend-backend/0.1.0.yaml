@@ -33,7 +33,18 @@ paths:
                 type: array
                 items:
                   type: string
-
+#文件目录的储存格式是：
+#application/json:
+#  schema:
+#    type: object
+#    additionalProperties:
+#      type: array
+#      items:
+#        oneOf:
+#          - type: string
+#          - type: object
+#            additionalProperties: true
+#以下所有涉及到文件目录的API均为此
   /strategy-registry:
     get:
       tags:
@@ -58,6 +69,13 @@ paths:
           application/json:
             schema:
               type: string
+#以此处为例，所有的路径都以对象的形式传递，避免传输无属性含义的值
+#以下所有涉及路径传递的API均为此
+#schema:
+#  type: object
+#  properties:
+#    file_path:
+#      type: string
       responses:
         '200':
           description: 发送配置表单
@@ -100,6 +118,7 @@ paths:
     get:
       tags:
         - 中间我也不知道分组的可选步骤
+        #是的，因为大部分opt可以发生在任何时候，这个“任何时候”指的是在模块设计上不区分，但是前端程序员会在合理的地方调用他们，或用户在被允许的地方进行
       summary: 请求同步配置表单
       responses:
         '200':
