@@ -1,0 +1,487 @@
+openapi: 3.0.0
+info:
+  title: 管理层主控端 API
+  version: 0.1.0
+externalDocs:
+  description: 面向高级模型用户的 CV 模型应用管理平台设计API
+  url: https://github.com/EthanH3514/CV-WEB/blob/main/doc/%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1.md
+# tags:
+#   - name: pet
+#     description: Everything about your Pets
+#     externalDocs:
+#       description: Find out more
+#       url: http://swagger.io
+#   - name: store
+#     description: Access to Petstore orders
+#     externalDocs:
+#       description: Find out more about our store
+#       url: http://swagger.io
+#   - name: user
+#     description: Operations about user
+paths:
+#文件目录的储存格式是：
+#application/json:
+#  schema:
+#    type: object
+#    additionalProperties:
+#      type: array
+#      items:
+#        oneOf:
+#          - type: string
+#          - type: object
+#            additionalProperties: true
+#以下所有涉及到文件目录的API均为此
+
+#以下所有涉及路径传递的API均为此
+#schema:
+#  type: object
+#  properties:
+#    file_path:
+#      type: string
+  
+  /sync:
+    get:
+      tags:
+        - 登录成功
+      summary: 请求同步任务信息
+      responses:
+        '200':
+          description: 同步成功
+        '501':
+          description: 同步失败
+          
+  /file/config/path:
+    get:
+      tags:
+        - 用户修改配置文件路径
+      summary: 请求同步配置文件
+      responses:
+        '200':
+          description: 正确
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: 错误
+          
+  /file/config:
+    post:
+      tags:
+        - 用户修改配置
+      summary: 发送修改后的配置表单
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: 
+              type: object
+      responses:
+        '200':
+          description: 正确
+        '500':
+          description: 错误
+  
+  /file/create:
+    post:
+      tags:
+        - 用户创建文件
+      summary: 发送文件路径
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file_path:
+                  type: string
+      responses:
+        '200':
+          description: 正确
+        '501':
+          description: 创建失败
+        '500':
+          description: 服务器错误
+          
+  /file/user/rename:
+    post:
+      tags:
+        - 用户重命名用户文件
+      summary: 发送新旧用户文件路径
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file_path:
+                  type: string
+      responses:
+        '200':
+          description: 正确
+        '501':
+          description: 重命名失败
+        '500':
+          description: 服务器错误
+          
+  /file/user/delete:
+    post:
+      tags:
+        - 用户删除用户文件
+      summary: 发送用户文件路径
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file_path:
+                  type: string
+      responses:
+        '200':
+          description: 正确
+        '501':
+          description: 删除失败
+        '500':
+          description: 服务器错误
+  
+  /file/edit:
+    post:
+      tags:
+        - 用户修改文件
+      summary: 发送修改后的文件路径和内容
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file_path:
+                  type: string
+                  description: 文件路径
+                content:
+                  type: object
+                  description: 文件内容
+      responses:
+        '200':
+          description: 正确
+        '501':
+          description: 错误
+        '500':
+          description: 服务器错误
+          
+  /file/get:
+    get:
+      tags:
+        - 用户查看文件
+      summary: 发送文件路径
+      parameters:
+        - name: path
+          in: query
+          required: true
+          schema:
+            type: object
+            properties:
+              file_path:
+                type: string
+          description: 文件路径
+      responses:
+        '200':
+          description: 确认
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: 文件不存在
+        '500':
+          description: 服务器错误
+          
+  /file/resource/preview:
+    post:
+      tags:
+        - 用户预览数据
+      summary: 发送数据文件路径
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file_path:
+                  type: string
+                  description: 文件路径
+      responses:
+        '200':
+          description: 正确
+    
+  /file/resource/preview/choose-strategy:
+    post:
+      tags:
+        - 用户选择渲染策略
+      summary: 发送渲染策略
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: 渲染策略
+      responses:
+        '200':
+          description: 正确
+          content:
+            application/json:
+              schema:
+                type: object
+                description: 渲染结果
+        '500':
+          description: 错误
+          
+  /data-pretreatment/file-directory:
+    get:
+      tags:
+        - 数据预处理
+      summary: 查询预处理数据文件目录
+      responses:
+        '200':
+          description: 确认
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    oneOf:
+                      - type: string
+                      - type: object
+                        additionalProperties: true
+        '500':
+          description: 错误
+        
+  /data-pretreatment/file-directory/change:
+    post:
+      tags:
+        - 数据预处理
+      summary: 用户修改预处理文件目录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file_path:
+                  type: string
+      responses:
+        '200':
+          description: 确认
+        '500':
+          description: 错误
+      
+  /data-pretreatment/execute:
+    get:
+      tags:
+        - 数据预处理
+      summary: 请求执行预处理策略
+      responses:
+        '200':
+          description: 确认
+        '404':
+          description: 数据文件不存在
+        '405':
+          description: 策略文件不存在
+        '500':
+          description: 服务器错误
+        '501':
+          description: 执行错误
+          
+  /module-training/dataset-directory:
+    get:
+      tags:
+        - 模型训练
+      summary: 查询训练数据目录
+      responses:
+        '200':
+          description: 确认
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    oneOf:
+                     - type: string
+                     - type: object
+                       additionalProperties: true
+        '500':
+          description: 错误
+    
+    post:
+      tags:
+        - 模型训练
+      summary: 用户修改训练数据目录
+      responses:
+        '200':
+          description: 正确
+          content:
+            appication/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    oneOf:
+                      - type: string
+                      - type: object
+                        additionalProperties: true
+        '404':
+          description: 文件不存在
+        '500':
+          description: 服务器错误
+      
+  /module-training/choose-module-resource-file:
+    post:
+      tags:
+        - 模型训练
+      summary: 用户选择模型资源文件
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file_path:
+                  type: string
+      responses:
+        '200':
+          description: 正确
+        '500':
+          description: 错误
+          
+  /module-training/execute:
+    get:
+      tags:
+        - 模型训练
+      summary: 用户执行模型训练
+      responses:
+        '200':
+          description: 确认
+        '404':
+          description: 数据文件不存在
+        '405':
+          description: 模型文件不存在
+        '501':
+          description: 执行错误
+        '500':
+          description: 服务器错误
+  
+  
+  /module-inference/resource-file/choose:
+    post:
+      tags:
+        - 模型推理
+      summary: 用户发送模型资源文件路径
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file_path:
+                  type: string
+      responses:
+        '200':
+          description: 正确
+        '500':
+          description: 错误
+  
+  /module-inference/data-directory:
+    get:
+      tags:
+        - 模型推理
+      summary: 查询推理数据目录
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    oneOf:
+                      - type: string
+                      - type: object
+                        additionalProperties: true
+  
+    post:
+      tags:
+        - 模型推理
+      summary: 用户修改推理数据目录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              items:
+                oneOf:
+                  - type: string
+                  - type: object
+                    additionalProperties: true
+      responses:
+        '200':
+          description: 正确
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  oneOf:
+                    - type: string
+                    - type: object
+                      additionalProperties: true
+        '404':
+          description: 文件不存在
+        '500':
+          description: 服务器错误
+  
+  /module-inference/execute:
+    get:
+      tags:
+        - 模型推理
+      summary: 执行模型推理策略
+      responses:
+        '200':
+          description: 确认
+        '404':
+          description: 数据文件不存在
+        '405':
+          description: 模型文件不存在
+        '500':
+          description: 服务器错误
+        '501':
+          description: 执行错误
+        
+  /exit/save:
+    get:
+      tags:
+        - 退出平台
+      summary: 保存现场
+      responses:
+        '200':
+          description: 确认
+        '500':
+          description: 错误
+    
