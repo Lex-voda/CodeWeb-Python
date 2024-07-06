@@ -8,10 +8,6 @@ end box
 box "操作层" #LightYellow
 participant "操作层主控端" as OperationEnd
 
-participant "数据预处理模块" as PreprocessModule
-participant "模型推理模块" as InferenceModule
-participant "模型训练模块" as TrainingModule
-
 participant "操作层数据库管理端" as OpDatabaseEnd
 end box
 
@@ -42,7 +38,7 @@ opt 用户注册
     Frontend -> OperationEnd: [POST]发送注册信息
     OperationEnd -> OpDatabaseEnd: 调用数据库管理端
     OpDatabaseEnd -> Database: 查询/修改注册信息
-    Database --> OpDatabaseEnd: 返回注册信息验证
+    Database --> OpDatabaseEnd: 发送注册信息验证
     OpDatabaseEnd --> OperationEnd: 返回注册信息验证
     OperationEnd --> Frontend: 发送注册信息验证
     note right: 201 (注册成功)\n401 (用户名已存在)\n500 (服务器错误)
@@ -52,7 +48,7 @@ end
 Frontend -> OperationEnd : [POST]发送登录信息
 OperationEnd -> OpDatabaseEnd: 调用数据库管理端
 OpDatabaseEnd -> Database: 查询登录信息
-Database --> OpDatabaseEnd: 返回登录信息验证
+Database --> OpDatabaseEnd: 发送登录信息验证
 OpDatabaseEnd --> OperationEnd: 返回登录信息验证 
 OperationEnd --> Frontend: 发送登录信息验证
 note right: 200 (登录成功)\n401 (用户名或密码错误)\n500 (服务器错误)
@@ -63,8 +59,8 @@ alt 登录成功
         OperationEnd -> OpDatabaseEnd: 调用数据库管理端
         OpDatabaseEnd -> Database: 查询现场信息
         Database --> OpDatabaseEnd: 返回现场信息
-        OpDatabaseEnd -> OperationEnd: 返回现场信息
-        OperationEnd --> Frontend: 发送现场信息和同步内容
+        OpDatabaseEnd --> OperationEnd: 返回现场信息
+        OperationEnd --> Frontend: 发送现场信息
         note right: 200 (恢复成功)\n501 (恢复失败)
     end
     Frontend -> Frontend: 恢复系统现场
@@ -74,30 +70,34 @@ alt 登录成功
             group 策略管理器同步
                 ManagementEnd -> StrategyModule: 调用策略管理模块
                 StrategyModule -> StrategyFile: 注册策略函数
-                StrategyModule -> ManagementEnd: 返回策略注册表
+                StrategyModule --> ManagementEnd: 返回策略注册表
             end
             group 配置管理器同步
                 ManagementEnd -> Database: 查询配置文件路径
                 Database --> ManagementEnd: 返回配置文件路径
                 ManagementEnd -> ConfigModule: 调用配置文件管理器
                 ConfigModule -> ConfigFile: 读取配置文件
-                ConfigModule -> ManagementEnd: 返回解析后的配置文件内容
+                ConfigModule --> ManagementEnd: 返回解析后的配置文件内容
             end
             group 资源管理器同步
                 ManagementEnd -> ResourceModule: 调用资源文件管理器
                 ResourceModule -> ResourceFile: 获取项目文件目录
-                ResourceModule -> ManagementEnd: 返回项目文件目录
+                ResourceModule --> ManagementEnd: 返回项目文件目录
             end
         end
         ManagementEnd --> OperationEnd: 发送用户文件同步信息
         note right: 200 (同步成功)\n501 (同步失败)
         OperationEnd -> OperationEnd: 根据协议解析同步信息
+        OperationEnd --> Frontend: 发送用户文件同步信息
+        note right: 200 (同步成功)\n501 (同步失败)
     end
     Frontend -> Frontend: 跳转首页
-
 else 登录失败
     Frontend -> Frontend: 显示登录失败
 end
+
+用户 -> Frontend: 选择项目
+Frontend -> Frontend: 进入项目
 opt 用户修改配置文件路径
     用户 -> Frontend: 选择配置文件路径
     Frontend -> OperationEnd: [POST]发送配置文件路径
@@ -107,10 +107,11 @@ opt 用户修改配置文件路径
 
     ManagementEnd -> MgDatabaseEnd: 调用数据库管理端
     MgDatabaseEnd -> Database: 读取数据库
-    MgDatabaseEnd -> ManagementEnd: 返回配置文件路径
+    Database --> MgDatabaseEnd: 返回配置文件路径
+    MgDatabaseEnd --> ManagementEnd: 返回配置文件路径
     ManagementEnd -> ConfigModule: 调用配置文件管理器
     ConfigModule -> ConfigFile: 读取配置文件
-    ConfigModule -> ManagementEnd: 返回配置表单
+    ConfigModule --> ManagementEnd: 返回配置表单
     ManagementEnd --> OperationEnd: 发送配置表单
     note right: 200 (正确)\n404 (未找到文件) \n500 (错误) 
     OperationEnd --> Frontend: 发送配置表单
@@ -118,9 +119,9 @@ opt 用户修改配置文件路径
 end
 opt 用户修改配置
     用户 -> Frontend: 修改配置表单
-    Frontend -> OperationEnd: [POST]发送修改后的配置表单
+    Frontend -> OperationEnd: [PATCH]发送修改后的配置表单
     note right: 200 (正确)\n500 (错误)
-    OperationEnd -> ManagementEnd: [POST]发送修改后的配置表单
+    OperationEnd -> ManagementEnd: [PATCH]发送修改后的配置表单
     note right: 200 (正确)\n500 (错误)
     ManagementEnd -> ConfigModule: 修改配置表单
     alt 用户选择保存配置文件
@@ -129,283 +130,111 @@ opt 用户修改配置
         ConfigModule -> ConfigFile: 写入修改后的配置文件
     end
 end
-opt 用户创建文件
-    note over Frontend
-        创建文件功能需要权限检查，权限不允许前端不开放创建功能
-    end note
-    用户 -> Frontend: 选择文件路径
-    Frontend -> OperationEnd: [POST]发送文件路径
-    note right: 200 (正确)\n500 (服务器错误)
-    OperationEnd -> ManagementEnd: [POST]发送文件路径
-    note right: 200 (正确)\n500 (服务器错误)
-    ManagementEnd -> ResourceModule: 调用资源文件管理器
-    alt 文件后缀是.py
-        ResourceModule -> StrategyFile: 创建策略文件
-    else 文件后缀是.json
-        ResourceModule -> ConfigFile: 创建配置文件
+group 用户文件操作
+    opt 用户创建文件
+        note over Frontend
+            创建文件功能需要权限检查，权限不允许前端不开放创建功能
+        end note
+        用户 -> Frontend: 选择文件路径
+        Frontend -> OperationEnd: [POST]发送文件路径
+        note right: 200 (正确)\n500 (服务器错误)
+        OperationEnd -> ManagementEnd: [POST]发送文件路径
+        note right: 200 (正确)\n500 (服务器错误)
+        ManagementEnd -> ResourceModule: 调用资源文件管理器
+        alt 文件后缀是.py
+            ResourceModule -> StrategyFile: 创建策略文件
+        else 文件后缀是.json
+            ResourceModule -> ConfigFile: 创建配置文件
+        end
     end
-end
-opt 用户重命名用户文件
-    note over Frontend
-        重命名文件功能需要权限检查，权限不允许前端不开放重命名功能
-    end note
-    用户 -> Frontend: 选择用户文件重命名
-    Frontend -> OperationEnd: [POST]发送新旧用户文件路径
-    note right: 200 (正确)\n500 (服务器错误)  
-    OperationEnd -> ManagementEnd: [POST]发送新旧用户文件路径
-    note right: 200 (正确)\n500 (服务器错误)  
-    ManagementEnd -> ResourceModule: 调用资源文件管理器
-    alt 文件后缀是.py
-        ResourceModule -> StrategyFile: 重命名策略文件
-    else 文件后缀是.json
-        ResourceModule -> ConfigFile: 重命名配置文件
+    opt 用户重命名用户文件
+        note over Frontend
+            重命名文件功能需要权限检查，权限不允许前端不开放重命名功能
+        end note
+        用户 -> Frontend: 选择用户文件重命名
+        Frontend -> OperationEnd: [PUT]发送新旧用户文件路径
+        note right: 200 (正确)\n500 (服务器错误)  
+        OperationEnd -> ManagementEnd: [PUT]发送新旧用户文件路径
+        note right: 200 (正确)\n500 (服务器错误)  
+        ManagementEnd -> ResourceModule: 调用资源文件管理器
+        alt 文件后缀是.py
+            ResourceModule -> StrategyFile: 重命名策略文件
+        else 文件后缀是.json
+            ResourceModule -> ConfigFile: 重命名配置文件
+        end
     end
-end
-opt 用户删除用户文件
-    note over Frontend
-        删除文件功能需要权限检查，权限不允许前端不开放删除功能
-    end note
-    用户 -> Frontend: 选择用户文件删除
-    Frontend -> OperationEnd: [POST]发送用户文件路径
-    note right: 200 (正确)\n500 (服务器错误)  
-    OperationEnd -> ManagementEnd: [POST]发送用户文件路径
-    note right: 200 (正确)\n500 (服务器错误)  
-    ManagementEnd -> ResourceModule: 调用资源文件管理器
-    alt 文件后缀是.py
-        ResourceModule -> StrategyFile: 删除策略文件
-    else 文件后缀是.json
-        ResourceModule -> ConfigFile: 删除配置文件
-    else 其他后缀
-        ResourceModule -> ResourceFile: 删除数据文件
+    opt 用户删除用户文件
+        note over Frontend
+            删除文件功能需要权限检查，权限不允许前端不开放删除功能
+        end note
+        用户 -> Frontend: 选择用户文件删除
+        Frontend -> OperationEnd: [DELETE]发送用户文件路径
+        note right: 200 (正确)\n500 (服务器错误)  
+        OperationEnd -> ManagementEnd: [DELETE]发送用户文件路径
+        note right: 200 (正确)\n500 (服务器错误)  
+        ManagementEnd -> ResourceModule: 调用资源文件管理器
+        alt 文件后缀是.py
+            ResourceModule -> StrategyFile: 删除策略文件
+        else 文件后缀是.json
+            ResourceModule -> ConfigFile: 删除配置文件
+        else 其他后缀
+            ResourceModule -> ResourceFile: 删除数据文件
+        end
     end
-end
 
-opt 用户修改文件
+    opt 用户修改文件
+        note over Frontend
+            修改策略文件功能需要权限检查，权限不允许前端不开放修改功能
+        end note
+        用户 -> Frontend: 提交修改后的文件路径和内容
+        Frontend -> OperationEnd: [PATCH]发送修改后的文件路径和内容
+        note right: 200 (正确)\n501 (错误)\n500 (服务器错误)  
+        OperationEnd -> ManagementEnd: [PATCH]发送修改后的文件路径和内容
+        note right: 200 (正确)\n501 (错误)\n500 (服务器错误)  
+        ManagementEnd -> ResourceModule: 调用资源文件管理器
+        alt 文件后缀是.py
+            ResourceModule -> StrategyFile: 修改策略文件
+        else 文件后缀是.json
+            ResourceModule -> ConfigFile: 修改配置文件
+        end
+    end
     note over Frontend
-        修改策略文件功能需要权限检查，权限不允许前端不开放修改功能
+        完成文件写操作后，前端需要请求同步
     end note
-    用户 -> Frontend: 提交修改后的文件路径和内容
-    Frontend -> OperationEnd: [POST]发送修改后的文件路径和内容
-    note right: 200 (正确)\n501 (错误)\n500 (服务器错误)  
-    OperationEnd -> ManagementEnd: [POST]发送修改后的文件路径和内容
-    note right: 200 (正确)\n501 (错误)\n500 (服务器错误)  
-    ManagementEnd -> ResourceModule: 调用资源文件管理器
-    alt 文件后缀是.py
-        ResourceModule -> StrategyFile: 修改策略文件
-    else 文件后缀是.json
-        ResourceModule -> ConfigFile: 修改配置文件
+    opt 用户查看文件
+        用户 -> Frontend: 选择文件查看
+        Frontend -> OperationEnd: [GET]发送文件路径
+        OperationEnd -> ManagementEnd: [GET]发送文件路径
+        ManagementEnd -> ResourceModule: 调用资源文件管理器
+        alt 文件后缀是.py
+            ResourceModule -> StrategyFile: 读取策略文件
+        else 文件后缀是.json
+            ResourceModule -> ConfigFile: 读取配置文件
+        end
+        ResourceModule --> ManagementEnd: 返回文件内容
+        ManagementEnd --> OperationEnd: 发送文件内容
+        note right: 200 (确认)\n404 (文件不存在)\n500 (服务器错误)  
+        OperationEnd --> Frontend: 发送文件内容
+        note right: 200 (确认)\n404 (文件不存在)\n500 (服务器错误)  
+        Frontend -> Frontend: 显示文件内容
     end
 end
+opt 执行策略
 note over Frontend
-    完成文件操作后，前端需要请求同步
+如果执行空策略，则相当于用前端默认渲染查看数据项
+策略以策略集为单位执行
 end note
-opt 用户查看文件
-    用户 -> Frontend: 选择文件查看
-    Frontend -> OperationEnd: [GET]发送文件路径
-    OperationEnd -> ManagementEnd: [GET]发送文件路径
-    ManagementEnd -> ResourceModule: 调用资源文件管理器
-    alt 文件后缀是.py
-        ResourceModule -> StrategyFile: 读取策略文件
-    else 文件后缀是.json
-        ResourceModule -> ConfigFile: 读取配置文件
-    end
-    ResourceModule -> ManagementEnd: 返回文件内容
-    ManagementEnd --> OperationEnd: 发送文件内容
-    note right: 200 (确认)\n404 (文件不存在)\n500 (服务器错误)  
-    OperationEnd --> Frontend: 发送文件内容
-    note right: 200 (确认)\n404 (文件不存在)\n500 (服务器错误)  
-    Frontend -> Frontend: 显示文件内容
+    用户 -> Frontend: 配置策略，连接数据项，选择策略
+    Frontend ->> OperationEnd: [POST]基于websockt连接发送策略信息
+    OperationEnd ->> ManagementEnd: [POST]基于websockt连接发送策略信息
+    ManagementEnd -> StrategyModule: 调用策略管理器
+    StrategyModule --> ManagementEnd: 返回策略结果
+    ManagementEnd --> OperationEnd: 发送策略结果
+    note right: 200 (正确)\n500 (错误)
+    OperationEnd --> Frontend: 发送策略结果
+    note right: 200 (正确)\n500 (错误)
 end
 
-opt 用户预览数据
-    用户 -> Frontend: 选择数据文件
-    Frontend -> OperationEnd: [POST]发送数据文件路径
-    OperationEnd -> ManagementEnd: [POST]发送数据文件路径
-    ManagementEnd -> ResourceModule: 调用资源文件管理器
-    ResourceModule -> ResourceFile: 读取数据文件
-    ResourceModule -> ManagementEnd: 返回数据文件
-
-    alt 用户选择渲染策略
-        用户 -> Frontend: 选择渲染策略
-        Frontend -> OperationEnd: [POST]发送渲染策略
-        OperationEnd -> ManagementEnd: [POST]发送渲染策略
-        ManagementEnd -> StrategyModule: 调用策略管理器
-        StrategyModule -> ManagementEnd: 返回渲染结果
-        ManagementEnd --> OperationEnd: 发送渲染结果
-        note right: 200 (正确)\n500 (错误) 
-        OperationEnd --> Frontend: 发送渲染结果
-        note right: 200 (正确)\n500 (错误) 
-    else 使用前端框架原生渲染策略
-        ManagementEnd --> OperationEnd: 发送数据
-        note right: 200 (正确)\n500 (错误) 
-        OperationEnd --> Frontend: 发送数据
-        note right: 200 (正确)\n500 (错误) 
-        Frontend -> Frontend: 使用前端框架原生渲染策略
-    end
-    用户 -> Frontend: 选择展示方式
-    Frontend -> Frontend: 展示数据
-end
-group 数据预处理
-    用户 -> Frontend: 查看预处理数据文件目录
-    Frontend -> OperationEnd: [GET]查询预处理数据文件目录
-    OperationEnd -> ManagementEnd: [GET]查询预处理数据文件目录
-
-    ManagementEnd --> OperationEnd: 返回预处理数据文件目录
-    note right: 200 (确认)\n 500 (错误)
-    OperationEnd --> Frontend: 返回预处理数据文件目录
-    note right: 200 (确认)\n 500 (错误)
-    opt 用户修改预处理文件目录
-        用户 -> Frontend: 选择预处理数据文件目录
-        Frontend -> OperationEnd: [POST]发送预处理数据文件目录
-        OperationEnd -> ManagementEnd: [POST]发送预处理数据文件目录
-        ManagementEnd --> OperationEnd: 返回预处理数据文件目录
-        note right: 200 (正确)\n404 (文件不存在)\n500 (服务器错误)  
-        OperationEnd --> Frontend: 返回预处理数据文件目录
-        note right: 200 (正确)\n404 (文件不存在)\n500 (服务器错误)  
-    end
-    用户 -> Frontend: 选择预处理策略
-    Frontend -> Frontend: 记录预处理策略队列
-    用户 -> Frontend: 执行预处理策略
-    Frontend -> OperationEnd: [POST]发送预处理策略队列
-    note right: 200 (确认)\n 500 (错误)
-    OperationEnd -> PreprocessModule: 调用预处理策略模块
-    PreprocessModule -> OpDatabaseEnd: 调用数据库管理端
-    OpDatabaseEnd -> Database: 写入预处理策略队列
-    PreprocessModule ->> ManagementEnd: [GET]请求执行预处理策略
-    note right: 202 (接受)\n500 (服务器错误)\n501 (执行错误)
-
-    ManagementEnd -> MgDatabaseEnd: 调用数据库管理端
-    MgDatabaseEnd --> Database: 查询预处理策略队列
-    MgDatabaseEnd -> ManagementEnd: 返回预处理策略队列
-    ManagementEnd -> ResourceModule: 调用资源文件管理器
-    ResourceModule -> StrategyModule : 调用资源集策略
-    StrategyModule -> ResourceFile: 读取资源文件
-    StrategyModule -> ResourceModule: 返回资源集
-    ResourceModule -> ManagementEnd: 返回资源迭代器
-    loop 数据预处理
-        ManagementEnd -> StrategyModule: 调用预处理策略
-        StrategyModule -> ManagementEnd: 返回预处理结果
-        ManagementEnd -> ResourceModule: 调用资源文件管理器
-        ResourceModule -> ResourceFile: 保存预处理结果
-        ManagementEnd --> PreprocessModule: 发送预处理日志
-        PreprocessModule -> OperationEnd: 解析预处理日志，返回预处理信息
-        OperationEnd --> Frontend: 发送预处理信息
-        Frontend -> Frontend: 显示预处理信息
-    end
-end
-group 模型训练
-    用户 -> Frontend: 查看训练数据目录
-    Frontend -> OperationEnd: [GET]查询训练数据目录
-    OperationEnd -> ManagementEnd: [GET]查询训练数据目录
-    ManagementEnd --> OperationEnd: 返回训练数据目录
-    note right: 200 (确认)\n500 (错误)
-    OperationEnd --> Frontend: 返回训练数据目录
-    note right: 200 (确认)\n500 (错误)
-    opt 用户修改训练数据目录
-        用户 -> Frontend: 选择训练数据目录
-        Frontend -> OperationEnd: [POST]发送训练数据目录
-        OperationEnd -> ManagementEnd: [POST]发送训练数据目录
-        ManagementEnd --> OperationEnd: 返回训练数据目录
-        note right: 200 (正确)\n404 (文件不存在)\n500 (服务器错误)  
-        OperationEnd --> Frontend: 返回训练数据目录
-        note right: 200 (正确)\n404 (文件不存在)\n500 (服务器错误) 
-    end
-    opt 用户选择模型资源文件
-        用户 -> Frontend: 选择模型资源文件
-        Frontend -> OperationEnd: [POST]发送模型资源文件路径
-        note right: 200 (正确)\n404 (文件不存在)\n500 (错误)
-        OperationEnd -> ManagementEnd: [POST]发送模型资源文件路径
-        note right: 200 (正确)\n404 (文件不存在)\n500 (错误)
-        ManagementEnd -> ConfigModule: 添加模型资源文件路径
-        ConfigModule -> ConfigFile: 写入配置文件
-    end
-    opt 用户选择训练策略 
-        用户 -> Frontend: 选择训练策略
-        Frontend -> OperationEnd: [POST]发送训练策略
-        note right: 200 (正确)\n404 (策略不存在)\n500 (错误)
-        OperationEnd -> ManagementEnd: [POST]发送训练策略
-        note right: 200 (正确)\n404 (策略不存在)\n500 (错误)
-    end
-    用户 -> Frontend: 执行模型训练策略
-    Frontend -> OperationEnd: [GET]发送模型训练策略执行请求
-    note right: 200 (确认)\n500 (错误)  
-    OperationEnd -> TrainingModule: 调用模型训练策略模块
-    TrainingModule ->> ManagementEnd: [GET]请求执行模型训练
-    note right: 202 (接受)\n501 (执行错误) \n500 (服务器错误)
-    ManagementEnd -> ResourceModule: 调用资源文件管理器
-    ResourceModule -> StrategyModule : 调用资源集策略
-    StrategyModule -> ResourceFile: 读取资源文件
-    StrategyModule -> ResourceModule: 返回资源集
-    ResourceModule -> ManagementEnd: 返回资源迭代器
-
-    ResourceModule -> ConfigModule: 读取配置信息
-    ResourceModule -> ResourceFile: 读取资源文件
-    ResourceModule -> ManagementEnd: 返回模型实例
-
-    loop 模型训练 
-        ManagementEnd -> StrategyModule: 调用训练策略
-        ManagementEnd -> ResourceModule: 调用资源文件管理器
-        ResourceModule -> ResourceFile: 保存训练结果
-        ManagementEnd --> TrainingModule: 发送训练日志
-        TrainingModule -> OperationEnd: 解析训练日志，返回训练信息
-        OperationEnd --> Frontend: 发送训练信息
-        Frontend -> Frontend: 显示训练信息
-    end
-end
-
-group 模型推理
-    opt 用户选择模型资源文件
-        用户 -> Frontend: 选择模型资源文件
-        Frontend -> OperationEnd: [POST]发送模型资源文件路径
-        note right: 200 (正确)\n500 (错误)
-        OperationEnd -> ManagementEnd: [POST]发送模型资源文件路径
-        note right: 200 (正确)\n500 (错误)
-        ManagementEnd -> ConfigModule: 添加模型资源文件路径
-        ConfigModule -> ConfigFile: 写入配置文件
-    end
-    用户 -> Frontend: 查看推理数据目录
-    Frontend -> OperationEnd: [GET]查询推理数据目录
-    OperationEnd -> ManagementEnd: [GET]查询推理数据目录
-    ManagementEnd --> OperationEnd: 返回推理数据目录
-    OperationEnd --> Frontend: 返回推理数据目录
-    opt 用户修改推理数据目录
-        用户 -> Frontend: 选择推理数据目录
-        Frontend -> OperationEnd: [POST]发送推理数据目录
-        OperationEnd -> ManagementEnd: [POST]发送推理数据目录
-        ManagementEnd --> OperationEnd: 返回推理数据目录
-        note right: 200 (正确)\n404 (文件不存在)\n500 (服务器错误)  
-        OperationEnd --> Frontend: 返回推理数据目录
-        note right: 200 (正确)\n404 (文件不存在)\n500 (服务器错误)  
-    end
-    opt 用户选择推理策略
-        用户 -> Frontend: 选择推理策略
-        Frontend -> OperationEnd: [POST]发送推理策略
-        note right: 200 (正确)\n404 (策略不存在)\n500 (错误)
-        OperationEnd -> ManagementEnd: [POST]发送推理策略
-        note right: 200 (正确)\n404 (策略不存在)\n500 (错误)
-    end
-    用户 -> Frontend: 执行模型推理策略
-    Frontend -> OperationEnd: [GET]请求执行推理策略
-    note right: 200 (确认)\n500 (服务器错误)\n501 (执行错误)
-    OperationEnd -> InferenceModule: 调用模型推理策略模块
-    InferenceModule ->> ManagementEnd: [GET]请求执行推理策略
-    note right: 202 (接受)\n500 (服务器错误)\n501 (执行错误)
-    ManagementEnd -> ResourceModule: 调用资源文件管理器
-    ResourceModule -> ConfigModule : 读取配置信息
-    ResourceModule -> StrategyModule : 调用资源集策略
-    StrategyModule -> ResourceFile: 读取资源文件
-    StrategyModule -> ResourceModule: 返回资源集
-    ResourceModule -> ManagementEnd: 创建并返回资源迭代器
-    loop 模型推理
-        ManagementEnd -> StrategyModule: 调用推理策略
-        ManagementEnd -> ResourceModule: 调用资源文件管理器
-        ResourceModule -> ResourceFile: 保存推理结果
-        ManagementEnd --> InferenceModule: 发送推理日志
-        InferenceModule -> OperationEnd: 解析推理日志，返回推理信息
-        OperationEnd --> Frontend: 发送推理信息
-        Frontend -> Frontend: 显示推理信息
-    end 
-end
 用户 -> Frontend: 退出平台
 Frontend -> OperationEnd: [POST]发送现场信息，请求保存现场
 note right: 200 (确认)\n500 (错误)
