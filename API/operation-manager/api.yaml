@@ -1,0 +1,456 @@
+openapi: 3.0.0
+info:
+  title: 管理层主控端 API
+  version: 0.2.0
+externalDocs:
+  description: 面向高级模型用户的 CV 模型应用管理平台设计API
+  url: https://github.com/EthanH3514/CV-WEB/blob/main/doc/%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1.md
+# tags:
+#   - name: pet
+#     description: Everything about your Pets
+#     externalDocs:
+#       description: Find out more
+#       url: http://swagger.io
+#   - name: store
+#     description: Access to Petstore orders
+#     externalDocs:
+#       description: Find out more about our store
+#       url: http://swagger.io
+#   - name: user
+#     description: Operations about user
+paths:
+#文件目录的储存格式是：
+#application/json:
+#  schema:
+#    type: object
+#    additionalProperties:
+#      type: array
+#      items:
+#        oneOf:
+#          - type: string
+#          - type: object
+#            additionalProperties: true
+#以下所有涉及到文件目录的API均为此
+
+#以下所有涉及路径传递的API均为此
+#schema:
+#  type: object
+#  properties:
+#    file_path:
+#      type: string
+  
+  /sync:
+    get:
+      tags:
+        - 同步
+      summary: 请求同步任务信息
+      responses:
+        '200':
+          description: 同步成功
+          content:
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      strategy_registry:
+                        type: object
+                      configuration:
+                        type: object
+                      file_catalog:
+                        type: array
+                        items:
+                          oneOf:
+                            - type: string
+                            - type: object
+        '501':
+          description: 同步失败
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+          
+  /file/config/sync:
+    get:
+      tags:
+        - 配置文件同步
+      summary: 请求同步配置文件
+      responses:
+        '200':
+          description: 正确
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      configuration:
+                        type: object
+        '404':
+          description: 未找到文件
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '500':
+          description: 错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+          
+  /file/config:
+    patch:
+      tags:
+        - 用户修改配置
+      summary: 发送修改后的配置表单
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: 
+              type: object
+              properties:
+                configuration:
+                  type: object
+      responses:
+        '200':
+          description: 正确
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '500':
+          description: 错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+  
+  /file:
+    post:
+      tags:
+        - 用户文件操作
+      summary: 创建文件
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file_path:
+                  type: string
+      responses:
+        '200':
+          description: 正确
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '500':
+          description: 服务器错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+          
+    patch:
+      tags:
+        - 用户文件操作
+      summary: 用户修改文件
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file_path:
+                  type: string
+                  description: 文件路径
+                content:
+                  type: string
+                  description: 文件内容
+      responses:
+        '200':
+          description: 正确
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '501':
+          description: 错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '500':
+          description: 服务器错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+          
+    get:
+      tags:
+        - 用户文件操作
+      summary: 用户查看文件
+      parameters:
+        - name: path
+          in: query
+          required: true
+          schema:
+            type: object
+            properties:
+              file_path:
+                type: string
+          description: 文件路径
+      responses:
+        '200':
+          description: 确认
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      content:
+                        type: string
+        '404':
+          description: 文件不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '500':
+          description: 服务器错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+          
+  /file/user/file-name:
+    put:
+      tags:
+        - 用户文件操作
+      summary: 重命名用户文件
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                new_file_path:
+                  type: string
+                old_file_path:
+                  type: string
+      responses:
+        '200':
+          description: 正确
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '500':
+          description: 服务器错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+          
+  /file/user:
+    delete:
+      tags:
+        - 用户文件操作
+      summary: 用户删除用户文件
+      parameters:
+        - in: query
+          name: file_path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: 正确
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '500':
+          description: 服务器错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+  
+  /execute:
+    post:
+      tags:
+        - 执行策略
+      summary: 发送策略信息
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                strategy:
+                  type: object
+      responses:
+        '200':
+          description: 正确
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+        '500':
+          description: 错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+  
+  /status:
+    get:
+      tags:
+        - 监测用户机系统信息
+      summary: 获取状态信息
+      responses:
+        '200':
+          description: 正确
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+        '500':
+          description: 服务器错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+  
