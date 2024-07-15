@@ -8,6 +8,8 @@ class StrategyModule:
     _registry = {}
     registry_info = {}
     project_root = None
+    
+    # 注册策略函数
     @classmethod
     def register(cls, name=None, comment=None):
         def decorator(func):
@@ -18,25 +20,20 @@ class StrategyModule:
             # 获取函数的签名
             signature = inspect.signature(func)
             return_annotation = signature.return_annotation
-            
-            # 获取函数定义所在的文件路径
-            func_file_path = inspect.getfile(func)
-            # 向上遍历文件系统，检查每一级目录名称是否在self.projects中
-            current_path = os.path.dirname(func_file_path)
-            found = False
-            while current_path:
-                parent_dir_name = os.path.basename(current_path)
-                if parent_dir_name in cls.projects:
-                    found = True
-                    project = parent_dir_name
-                    break
-                # 如果当前路径已经是根目录，则停止循环
-                if os.path.dirname(current_path) == cls.project_root:
-                    break
-                current_path = os.path.dirname(current_path)
+        
+            # 规范化路径
+            func_file_path = os.path.normpath(inspect.getfile(func))
+            self_root_normalized = os.path.normpath(cls.project_root)
 
-            if not found:
-                raise ValueError(f"函数{func.__name__}所在的目录结构中没有找到任何项目文件夹")
+            # 找到公共路径部分
+            common_path = os.path.commonpath([func_file_path, self_root_normalized])
+
+            # 从func_file_path中移除公共路径部分，然后分割剩余路径
+            different_path = func_file_path[len(common_path)+1:]  # +1是为了去除路径分隔符
+            project = different_path.split(os.path.sep)[0]
+
+            if not project:
+                raise ValueError(f"函数{func.__name__}不属于已知的任何项目")
             
             if project not in cls._registry:
                 cls._registry[project] = {}
@@ -49,47 +46,76 @@ class StrategyModule:
     def __init__(self, resource_module):
         self.resource_module = resource_module
         self.sync(init=True)
-        print(self._registry)
         
+    # 同步策略注册表
     def sync(self, init=False):
+        print("--开始同步策略注册表--")
         if not init:
             self.resource_module.sync()
-        self.project_root = self.resource_module.project_root
+        StrategyModule.project_root = self.resource_module.project_root
         StrategyModule.projects = self.resource_module.projects
         self.register_path = {task: self.resource_module.scan_for_register(task) for task in self.projects}
         for project in self.projects:
             for path in self.register_path[project]:
                 self.registry_import(path)
+                
+        print("==策略注册表同步完成==")
+        print(self._registry)
 
+    # 通过文件路径导入模块
     def registry_import(self, path):
-        # 通过文件路径导入模块
         spec = importlib.util.spec_from_file_location(path.split('.')[0].split('\\')[-1], path)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         return module
     
+    # 获取注册表信息
     def get_registry_info(cls):
         return cls.registry_info
     
-        
+    # 执行项目
     def execute_project(self,project_name, project, config):
+        print(f"--开始执行项目 {project_name}--")
         for task_name, task in project.items():
+            print(f"--执行任务 {task_name}")
             self.execute_task(project_name, task, config)
+            print(f"==任务 {task_name} 执行完成==")
+        print(f"==项目 {project_name} 执行完成==")
     
+    # 执行任务
     def execute_task(self,project_name, task, config):
-        pre_args = None
-        for strategy in task["strategy_queue"]:
+        pre_output = {}
+        iter = [0]
+        start = 0
+        if task["iterator"] == "EN" :
+            strategy = task["strategy_queue"][0]
             func_name = strategy["function"]
+            id = strategy["id"]
             kwargs = {}
             for args_name, args_value in strategy["args"].items():
-                if args_value == "PRE_OUTPUT":
-                    kwargs[args_name] = pre_args
-                else:
-                    kwargs[args_name] = config[args_value]
-            print(f"执行{func_name}函数，参数为{kwargs}")
-            pre_args = self.execute_strategy(project_name, func_name, **kwargs)
-            print(f"执行结果为{pre_args}")
-            
+                kwargs[args_name] = config[args_value]
+            print(f'--执行策略 {id}，策略函数为 {func_name}，参数配置为 {strategy["args"]}，参数为 {kwargs}')
+            iter = self.execute_strategy(project_name, func_name, **kwargs)
+            print("==得到迭代器对象")
+            start = 1
+        for i in range(len(iter)):
+            for strategy in task["strategy_queue"][start:]:
+                id = strategy["id"]
+                func_name = strategy["function"]
+                kwargs = {}
+                for args_name, args_value in strategy["args"].items():
+                    pre_strategy_id, _, output_key = args_value.rpartition('_')
+                    if output_key == "OUTPUT":
+                        kwargs[args_name] = pre_output[pre_strategy_id]
+                    elif args_value == "ITER_TERM":
+                        kwargs[args_name] = iter[i]
+                    else:
+                        kwargs[args_name] = config[args_value]
+                print(f'--执行策略 {id}，策略函数为 {func_name}，参数配置为 {strategy["args"]}，参数为 {kwargs}')
+                pre_output[id] = self.execute_strategy(project_name, func_name, **kwargs)
+                print(f"==执行结果为 {pre_output[id]}")
+
+    # 执行策略
     def execute_strategy(self, project, name, *args, **kwargs):
         if project in self._registry:
             if name in self._registry[project]:
@@ -103,7 +129,7 @@ class StrategyModule:
             else:
                 raise ValueError(f"函数 {name} 未注册")
         else:
-            raise ValueError(f"模块 {project} 未注册")
+            raise ValueError(f"项目 {project} 未注册")
         
 
 class ResourceModule:
@@ -112,7 +138,6 @@ class ResourceModule:
         self.ignore_suffixes = ignore_suffixes if ignore_suffixes else [] # 忽略的文件后缀
         
         self.sync()
-
 
     def get_resource_files_path(self):
         def handle_directory(directory):
@@ -159,6 +184,7 @@ class ResourceModule:
         return register_file
         
     def sync(self):
+        print("--开始同步资源管理器--")
         self.project_root = os.path.dirname(
                                 os.path.dirname(
                                     os.path.dirname(
@@ -166,6 +192,7 @@ class ResourceModule:
         self.resource_files_path_dict = self.get_resource_files_path()
         self.projects = [list(item.keys())[0] for item in list(self.resource_files_path_dict.values())[0] if isinstance(item, dict) and list(item.keys())[0] != 'CVWEB']
         self.resource_files_path_list = self.restore_paths_from_dict(self.resource_files_path_dict)
+        print("==资源管理器同步完成==")
         
 class ConfigModule:
     def __init__(self, system_config_path):
@@ -196,12 +223,13 @@ class ConfigModule:
     
     # 同步系统配置
     def sys_sync(self):
+        print("--开始同步系统配置--")
         self.sys = self.sys_config(self.config_path)
+        print("==系统配置同步完成==")
         
     # 同步用户配置文件
     def sync(self, project, user_config_path):
         self.user_config[project] = self.read_config(user_config_path)
-        print(f"用户配置文件{user_config_path}同步成功")
         
     # 获取数据库参数
     def get_db_params(self):

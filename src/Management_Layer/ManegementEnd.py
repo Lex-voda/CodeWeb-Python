@@ -5,6 +5,8 @@ import threading
 
 class ManegementEnd:
     def __init__(self):
+        print("---管理层启动---")
+        print("==添加项目根目录到临时环境变量==")
         sys.path.append(
             os.path.dirname(
                 os.path.dirname(
@@ -39,19 +41,24 @@ class ManegementEnd:
         self.sys_config = self.config_manager.sys_config
         
         # 链接数据库，获得用户配置文件路径，然后同步配置
+        print(f"--开始同步用户配置文件--")
         for project in self.projects:
             user_config_path = self.db_manager.get_project_config(project)
             user_config_path = os.path.join(self.root, project, user_config_path)
             self.config_manager.sync(project, user_config_path)
+            print(f"==用户配置文件{user_config_path}同步完成")
+        print("==用户配置文件同步完成==")
     
     def execute(self, message):
         projects = []
+        print("--开始执行--")
         for project_name, project in message.items():
             thread = threading.Thread(target=self.strategy_manager.execute_project, args=(project_name, project, self.config_manager.user_config[project_name]))
             projects.append(thread)
             thread.start()
         for project in projects:
             project.join()
+        print("==所有执行完成==")
     
     
 if __name__ == '__main__':
@@ -73,13 +80,40 @@ if __name__ == '__main__':
                         "id":"strategy_2",
                         "function":"sub",
                         "args": {
-                            "a":"PRE_OUTPUT",
+                            "a":"strategy_1_OUTPUT",
                             "b":"num1"
                         }
                     }
                 ],
-                "execution_order": ["strategy_1","strategy_2"],
-                "iterator":null
+                "iterator":"UN"
+            }
+        }
+    }
+    """
+    json_data = json.loads(exam_json)
+    maneger.execute(json_data)
+    exam_json = """
+    {
+        "test_project": {
+            "add_sub_iter":{
+                "strategy_queue":[
+                    {
+                        "id":"strategy_1",
+                        "function":"iter",
+                        "args": {
+                            "num":"num3"
+                        }
+                    },
+                    {
+                        "id":"strategy_2",
+                        "function":"sub",
+                        "args": {
+                            "a":"ITER_TERM",
+                            "b":"num1"
+                        }
+                    }
+                ],
+                "iterator":"EN"
             }
         }
     }
