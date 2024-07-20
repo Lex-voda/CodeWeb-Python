@@ -54,44 +54,43 @@ OperationEnd --> Frontend: 发送登录信息验证
 note right: 200 (登录成功)\n401 (用户名或密码错误)\n500 (服务器错误)
 alt 登录成功
     Frontend -> Frontend: 显示登录成功
-    opt 恢复系统现场
-        Frontend -> OperationEnd: [GET]请求恢复系统现场
-        OperationEnd -> OpDatabaseEnd: 调用数据库管理端
-        OpDatabaseEnd -> Database: 查询现场信息
-        Database --> OpDatabaseEnd: 返回现场信息
-        OpDatabaseEnd --> OperationEnd: 返回现场信息
-        OperationEnd --> Frontend: 发送现场信息
-        note right: 200 (恢复成功)\n501 (恢复失败)
-    end
-    Frontend -> Frontend: 恢复系统现场
     opt 用户文件同步
-        Frontend -> OperationEnd: [GET]请求同步用户文件
-        OperationEnd -> ManagementEnd: [GET]请求同步任务信息
-        group 管理层同步用户文件
-            group 策略管理器同步
-                ManagementEnd -> StrategyModule: 调用策略管理模块
-                StrategyModule -> StrategyFile: 注册策略函数
-                StrategyModule --> ManagementEnd: 返回策略注册表
-            end
-            group 配置管理器同步
-                ManagementEnd -> MgDatabaseEnd: 调用数据库管理端
-                MgDatabaseEnd -> Database: 读取数据库
-                Database --> MgDatabaseEnd: 返回配置文件路径
-                MgDatabaseEnd --> ManagementEnd: 返回配置文件路径
-                ManagementEnd -> ConfigModule: 调用配置文件管理器
-                ConfigModule -> ConfigFile: 读取配置文件
-                ConfigModule --> ManagementEnd: 返回解析后的配置文件内容
-            end
-            group 资源管理器同步
-                ManagementEnd -> ResourceModule: 调用资源文件管理器
-                ResourceModule -> ResourceFile: 获取项目文件目录
-                ResourceModule --> ManagementEnd: 返回项目文件目录
-            end
+        Frontend -> OperationEnd: [GET]请求策略注册表
+        OperationEnd -> ManagementEnd: [GET]请求同步策略注册表
+        group 策略管理器同步
+            ManagementEnd -> StrategyModule: 调用策略管理模块
+            StrategyModule -> StrategyFile: 注册策略函数
+            StrategyModule --> ManagementEnd: 返回策略注册表
         end
-        ManagementEnd --> OperationEnd: 发送用户文件同步信息
+        ManagementEnd --> OperationEnd: 发送策略注册表
         note right: 200 (同步成功)\n501 (同步失败)
-        OperationEnd -> OperationEnd: 根据协议解析同步信息
-        OperationEnd --> Frontend: 发送用户文件同步信息
+        OperationEnd --> Frontend: 发送策略注册表
+        note right: 200 (同步成功)\n501 (同步失败)
+        Frontend -> OperationEnd: [GET]请求同步配置文件
+        OperationEnd -> ManagementEnd: [GET]请求同步配置文件
+        group 配置管理器同步
+            ManagementEnd -> MgDatabaseEnd: 调用数据库管理端
+            MgDatabaseEnd -> Database: 读取数据库
+            Database --> MgDatabaseEnd: 返回配置文件路径
+            MgDatabaseEnd --> ManagementEnd: 返回配置文件路径
+            ManagementEnd -> ConfigModule: 调用配置文件管理器
+            ConfigModule -> ConfigFile: 读取配置文件
+            ConfigModule --> ManagementEnd: 返回解析后的配置文件内容
+        end
+        ManagementEnd --> OperationEnd: 发送配置文件内容
+        note right: 200 (同步成功)\n501 (同步失败)
+        OperationEnd --> Frontend: 发送配置文件内容
+        note right: 200 (同步成功)\n501 (同步失败)
+        Frontend -> OperationEnd: [GET]请求同步资源文件
+        OperationEnd -> ManagementEnd: [GET]请求同步资源文件
+        group 资源管理器同步
+            ManagementEnd -> ResourceModule: 调用资源文件管理器
+            ResourceModule -> ResourceFile: 获取项目文件目录
+            ResourceModule --> ManagementEnd: 返回项目文件目录
+        end
+        ManagementEnd --> OperationEnd: 发送项目文件目录
+        note right: 200 (同步成功)\n501 (同步失败)
+        OperationEnd --> Frontend: 发送项目文件目录
         note right: 200 (同步成功)\n501 (同步失败)
     end
     Frontend -> Frontend: 跳转首页
@@ -100,7 +99,17 @@ else 登录失败
 end
 
 用户 -> Frontend: 选择项目
-Frontend -> Frontend: 进入项目
+Frontend -> Frontend: 进入项目工作台
+opt 恢复项目现场
+    Frontend -> OperationEnd: [GET]请求恢复项目现场
+    OperationEnd -> OpDatabaseEnd: 调用数据库管理端
+    OpDatabaseEnd -> Database: 查询项目现场信息
+    Database --> OpDatabaseEnd: 返回项目现场信息
+    OpDatabaseEnd --> OperationEnd: 返回项目现场信息
+    OperationEnd --> Frontend: 发送项目现场信息
+    note right: 200 (恢复成功)\n501 (恢复失败)
+end
+Frontend -> Frontend: 恢复系统现场
 opt 用户修改配置文件路径
     用户 -> Frontend: 选择配置文件路径
     Frontend -> OperationEnd: [POST]发送配置文件路径
@@ -222,19 +231,26 @@ group 用户文件操作
         Frontend -> Frontend: 显示文件内容
     end
 end
-opt 执行策略
-note over Frontend
-如果执行空策略，则相当于用前端默认渲染查看数据项
-策略以策略集为单位执行
-end note
-    用户 -> Frontend: 配置策略，连接数据项，选择策略
-    Frontend ->> OperationEnd: [POST]基于websockt连接发送策略信息
-    OperationEnd ->> ManagementEnd: [POST]基于websockt连接发送策略信息
+opt 执行任务
+    用户 -> Frontend: 配置任务
+    Frontend ->> OperationEnd: [POST]基于websockt连接发送任务信息
+    OperationEnd ->> ManagementEnd: [POST]基于websockt连接发送任务信息
     ManagementEnd -> StrategyModule: 调用策略管理器
     StrategyModule --> ManagementEnd: 返回策略结果
-    ManagementEnd --> OperationEnd: 发送策略结果
+    ManagementEnd --> OperationEnd: 发送任务结果
     note right: 200 (正确)\n500 (错误)
-    OperationEnd --> Frontend: 发送策略结果
+    OperationEnd --> Frontend: 发送任务结果
+    note right: 200 (正确)\n500 (错误)
+end
+opt 停止正在运行的任务或删除等待运行的任务
+    用户 -> Frontend: 选择停止任务
+    Frontend ->> OperationEnd: [GET]基于websockt连接发送任务信息
+    OperationEnd ->> ManagementEnd: [DELETE]基于websockt连接发送任务信息
+    ManagementEnd -> StrategyModule: 调用策略管理器
+    StrategyModule --> ManagementEnd: 返回执行结果
+    ManagementEnd --> OperationEnd: 发送执行结果
+    note right: 200 (正确)\n500 (错误)
+    OperationEnd --> Frontend: 发送执行结果
     note right: 200 (正确)\n500 (错误)
 end
 opt 监测用户机系统信息
@@ -243,7 +259,7 @@ opt 监测用户机系统信息
     ManagementEnd --> OperationEnd: 返回监控信息
     OperationEnd --> Frontend: 发送监控信息
 end
-用户 -> Frontend: 退出平台
+用户 -> Frontend: 退出项目工作台
 Frontend -> OperationEnd: [POST]发送现场信息，请求保存现场
 note right: 200 (确认)\n500 (错误)
 OperationEnd -> OpDatabaseEnd: 调用数据库管理端
