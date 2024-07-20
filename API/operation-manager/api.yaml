@@ -19,25 +19,6 @@ externalDocs:
 #   - name: user
 #     description: Operations about user
 paths:
-#文件目录的储存格式是：
-#application/json:
-#  schema:
-#    type: object
-#    additionalProperties:
-#      type: array
-#      items:
-#        oneOf:
-#          - type: string
-#          - type: object
-#            additionalProperties: true
-#以下所有涉及到文件目录的API均为此
-
-#以下所有涉及路径传递的API均为此
-#schema:
-#  type: object
-#  properties:
-#    file_path:
-#      type: string
   
   /sync:
     get:
@@ -411,6 +392,27 @@ paths:
                     type: string
                   data:
                     type: object
+                    additionalProperties:  # 项目名称
+                      type: object
+                      additionalProperties:   # 任务名称
+                        type: object
+                        properties:
+                          STRATEGY_QUEUE:
+                            type: array
+                            items:
+                              type: object
+                              required: [ID, FUNC, ARGS]
+                              properties:
+                                ID:
+                                  type: string
+                                FUNC:
+                                  type: string
+                                ARGS:
+                                  type: object
+                                  additionalProperties: 
+                                    type: string
+                          ITER:
+                            type: boolean
         '500':
           description: 错误
           content:

@@ -65,6 +65,7 @@ alt 登录成功
     end
     Frontend -> Frontend: 恢复系统现场
     opt 用户文件同步
+        Frontend -> OperationEnd: [GET]请求同步用户文件
         OperationEnd -> ManagementEnd: [GET]请求同步任务信息
         group 管理层同步用户文件
             group 策略管理器同步
@@ -73,8 +74,10 @@ alt 登录成功
                 StrategyModule --> ManagementEnd: 返回策略注册表
             end
             group 配置管理器同步
-                ManagementEnd -> Database: 查询配置文件路径
-                Database --> ManagementEnd: 返回配置文件路径
+                ManagementEnd -> MgDatabaseEnd: 调用数据库管理端
+                MgDatabaseEnd -> Database: 读取数据库
+                Database --> MgDatabaseEnd: 返回配置文件路径
+                MgDatabaseEnd --> ManagementEnd: 返回配置文件路径
                 ManagementEnd -> ConfigModule: 调用配置文件管理器
                 ConfigModule -> ConfigFile: 读取配置文件
                 ConfigModule --> ManagementEnd: 返回解析后的配置文件内容
@@ -234,7 +237,12 @@ end note
     OperationEnd --> Frontend: 发送策略结果
     note right: 200 (正确)\n500 (错误)
 end
-
+opt 监测用户机系统信息
+    Frontend ->> OperationEnd: [GET]在socketweb环境中请求监控信息
+    OperationEnd ->> ManagementEnd: [GET]在socketweb环境中请求监控信息
+    ManagementEnd --> OperationEnd: 返回监控信息
+    OperationEnd --> Frontend: 发送监控信息
+end
 用户 -> Frontend: 退出平台
 Frontend -> OperationEnd: [POST]发送现场信息，请求保存现场
 note right: 200 (确认)\n500 (错误)
