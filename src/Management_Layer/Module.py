@@ -1,8 +1,12 @@
 import os
 import re
+import sys
 import json
 import inspect
 import importlib.util
+import psutil
+import GPUtil
+import wmi
 
 class StrategyModule:
     _registry = {}
@@ -74,36 +78,45 @@ class StrategyModule:
         return cls.registry_info
     
     # 执行项目
-    def execute_project(self,project_name, project, config):
-        print(f"--开始执行项目 {project_name}--")
-        for task_name, task in project.items():
-            print(f"--执行任务 {task_name}")
-            self.execute_task(project_name, task, config)
-            print(f"==任务 {task_name} 执行完成==")
-        print(f"==项目 {project_name} 执行完成==")
+    def execute_project(self,project_name, project, config, output=None):
+        original_stdout = sys.stdout
+        original_stderr = sys.stderr
+        try:
+            sys.stdout = output
+            sys.stderr = output
+
+            print(f"--开始执行项目 {project_name}--")
+            for task_name, task in project.items():
+                print(f"--执行任务 {task_name}")
+                self.execute_task(project_name, task, config)
+                print(f"==任务 {task_name} 执行完成==")
+            print(f"==项目 {project_name} 执行完成==")
+        finally:
+            sys.stdout = original_stdout
+            sys.stderr = original_stderr
     
     # 执行任务
     def execute_task(self,project_name, task, config):
         pre_output = {}
         iter = [0]
         start = 0
-        if task["iterator"] == "EN" :
-            strategy = task["strategy_queue"][0]
-            func_name = strategy["function"]
-            id = strategy["id"]
+        if task["ITER"] == True :
+            strategy = task["STRATEGY_QUEUE"][0]
+            func_name = strategy["FUNC"]
+            id = strategy["ID"]
             kwargs = {}
-            for args_name, args_value in strategy["args"].items():
+            for args_name, args_value in strategy["ARGS"].items():
                 kwargs[args_name] = config[args_value]
-            print(f'--执行策略 {id}，策略函数为 {func_name}，参数配置为 {strategy["args"]}，参数为 {kwargs}')
+            print(f'--执行策略 {id}，策略函数为 {func_name}，参数配置为 {strategy["ARGS"]}，参数为 {kwargs}')
             iter = self.execute_strategy(project_name, func_name, **kwargs)
             print("==得到迭代器对象")
             start = 1
         for i in range(len(iter)):
-            for strategy in task["strategy_queue"][start:]:
-                id = strategy["id"]
-                func_name = strategy["function"]
+            for strategy in task["STRATEGY_QUEUE"][start:]:
+                id = strategy["ID"]
+                func_name = strategy["FUNC"]
                 kwargs = {}
-                for args_name, args_value in strategy["args"].items():
+                for args_name, args_value in strategy["ARGS"].items():
                     pre_strategy_id, _, output_key = args_value.rpartition('_')
                     if output_key == "OUTPUT":
                         kwargs[args_name] = pre_output[pre_strategy_id]
@@ -111,7 +124,7 @@ class StrategyModule:
                         kwargs[args_name] = iter[i]
                     else:
                         kwargs[args_name] = config[args_value]
-                print(f'--执行策略 {id}，策略函数为 {func_name}，参数配置为 {strategy["args"]}，参数为 {kwargs}')
+                print(f'--执行策略 {id}，策略函数为 {func_name}，参数配置为 {strategy["ARGS"]}，参数为 {kwargs}')
                 pre_output[id] = self.execute_strategy(project_name, func_name, **kwargs)
                 print(f"==执行结果为 {pre_output[id]}")
 
@@ -136,7 +149,7 @@ class ResourceModule:
     def __init__(self, ignore_prefixes=None, ignore_suffixes=None):
         self.ignore_prefixes = ignore_prefixes if ignore_prefixes else [] # 忽略的文件夹前缀
         self.ignore_suffixes = ignore_suffixes if ignore_suffixes else [] # 忽略的文件后缀
-        
+        self.sys_name = "CV_WEB"
         self.sync()
 
     def get_resource_files_path(self):
@@ -190,9 +203,20 @@ class ResourceModule:
                                     os.path.dirname(
                                         os.path.abspath(__file__))))
         self.resource_files_path_dict = self.get_resource_files_path()
-        self.projects = [list(item.keys())[0] for item in list(self.resource_files_path_dict.values())[0] if isinstance(item, dict) and list(item.keys())[0] != 'CVWEB']
+        self.projects = [list(item.keys())[0] for item in list(self.resource_files_path_dict.values())[0] if isinstance(item, dict) and list(item.keys())[0] != self.sys_name]
         self.resource_files_path_list = self.restore_paths_from_dict(self.resource_files_path_dict)
         print("==资源管理器同步完成==")
+        
+    def monitor_system_resources(self):
+        # 获取系统资源信息
+        return {
+        "cpu": psutil.cpu_percent(),
+        "mem": psutil.virtual_memory().percent,
+        "disk": psutil.disk_usage('/').percent,
+        "gpu": GPUtil.getGPUs()[0].load if GPUtil.getGPUs() else None,
+        "cpu_temp": (lambda: (wmi.WMI(namespace="root\wmi").MSAcpi_ThermalZoneTemperature()[0].CurrentTemperature / 10.0) - 273.15 if wmi else None)(),
+        "gpu_temp": GPUtil.getGPUs()[0].temperature if GPUtil.getGPUs() else None
+    }
         
 class ConfigModule:
     def __init__(self, system_config_path):
