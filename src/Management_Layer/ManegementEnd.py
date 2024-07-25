@@ -2,16 +2,19 @@ import os
 import sys
 import json
 import threading
+import ctypes
+from utils import ThreadOutputStream 
 
 class ManegementEnd:
     def __init__(self):
         print("---管理层启动---")
+        self.request_admin_privileges()
         print("==添加项目根目录到临时环境变量==")
         sys.path.append(
             os.path.dirname(
                 os.path.dirname(
                     os.path.dirname(os.path.abspath(__file__)))))
-        from CVWEB.api import StrategyModule, ResourceModule, ConfigModule, DBManager
+        from CV_WEB.api import StrategyModule, ResourceModule, ConfigModule, DBManager
         
         # 资源管理器
         self.res_manager = ResourceModule()
@@ -51,41 +54,60 @@ class ManegementEnd:
     
     def execute(self, message):
         projects = []
+        output_dict = {}
         print("--开始执行--")
         for project_name, project in message.items():
-            thread = threading.Thread(target=self.strategy_manager.execute_project, args=(project_name, project, self.config_manager.user_config[project_name]))
+            output = ThreadOutputStream()
+            thread = threading.Thread(target=self.strategy_manager.execute_project, args=(project_name, project, self.config_manager.user_config[project_name], output))
             projects.append(thread)
             thread.start()
         for project in projects:
             project.join()
+            output_dict[project_name] = ''.join(output.contents)
+        print(output_dict)
         print("==所有执行完成==")
     
-    
+    def request_admin_privileges(self):
+        """
+        请求管理员权限。如果当前脚本未以管理员身份运行，将重新启动脚本并申请管理员权限。
+        """
+        try:
+            if ctypes.windll.shell32.IsUserAnAdmin():
+                return True
+        except:
+            pass
+
+        # 请求管理员权限
+        print("请求管理员权限")
+        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+        sys.exit(0)
+        
+        
 if __name__ == '__main__':
     maneger = ManegementEnd()
     exam_json = """
     {
         "test_project": {
             "add_sub":{
-                "strategy_queue":[
+                "STRATEGY_QUEUE":[
                     {
-                        "id":"strategy_1",
-                        "function":"add",
-                        "args": {
+                        "ID":"strategy_1",
+                        "FUNC":"add",
+                        "ARGS": {
                             "a":"num1",
                             "b":"num2"
                         }
                     },
                     {
-                        "id":"strategy_2",
-                        "function":"sub",
-                        "args": {
+                        "ID":"strategy_2",
+                        "FUNC":"sub",
+                        "ARGS": {
                             "a":"strategy_1_OUTPUT",
                             "b":"num1"
                         }
                     }
                 ],
-                "iterator":"UN"
+                "ITER":false
             }
         }
     }
@@ -96,27 +118,30 @@ if __name__ == '__main__':
     {
         "test_project": {
             "add_sub_iter":{
-                "strategy_queue":[
+                "STRATEGY_QUEUE":[
                     {
-                        "id":"strategy_1",
-                        "function":"iter",
-                        "args": {
+                        "ID":"strategy_1",
+                        "FUNC":"iter",
+                        "ARGS": {
                             "num":"num3"
                         }
                     },
                     {
-                        "id":"strategy_2",
-                        "function":"sub",
-                        "args": {
+                        "ID":"strategy_2",
+                        "FUNC":"sub",
+                        "ARGS": {
                             "a":"ITER_TERM",
                             "b":"num1"
                         }
                     }
                 ],
-                "iterator":"EN"
+                "ITER":true
             }
         }
     }
     """
     json_data = json.loads(exam_json)
     maneger.execute(json_data)
+    for i in range(5):
+        print(maneger.res_manager.monitor_system_resources())
+    input("按任意键退出...")
