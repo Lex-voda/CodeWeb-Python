@@ -2,13 +2,15 @@ import os
 import sys
 import json
 import threading
+import time
+import queue
 import ctypes
 from utils import ThreadOutputStream 
 
 class ManegementEnd:
     def __init__(self):
         print("---管理层启动---")
-        self.request_admin_privileges()
+        self.__request_admin_privileges()
         print("==添加项目根目录到临时环境变量==")
         sys.path.append(
             os.path.dirname(
@@ -67,7 +69,7 @@ class ManegementEnd:
         print(output_dict)
         print("==所有执行完成==")
     
-    def request_admin_privileges(self):
+    def __request_admin_privileges(self):
         """
         请求管理员权限。如果当前脚本未以管理员身份运行，将重新启动脚本并申请管理员权限。
         """
@@ -80,11 +82,46 @@ class ManegementEnd:
         # 请求管理员权限
         print("请求管理员权限")
         ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
-        sys.exit(0)
+        # os._exit(0)
         
+    def monitor_system_resources(self, time_interval=1):
+        """
+        在新线程中监控系统资源。
+        """
+        monitor_queue = queue.Queue()
+        def monitor(time_interval):
+            while True:
+                resources = self.res_manager.monitor_system_resources()
+                monitor_queue.put(resources)
+                time.sleep(time_interval)
+
+        monitor_thread = threading.Thread(target=monitor,args=(time_interval,))
+        monitor_thread.daemon = True  # 设置为守护线程
+        monitor_thread.start()
+        return monitor_queue
         
 if __name__ == '__main__':
+    """
+    管理层主控端功能说明：
+    1. 同步资源管理器、策略管理器、配置管理器
+    2. 对任务消息进行解析并执行
+    3. 请求管理员权限
+    
+    """
     maneger = ManegementEnd()
+    
+    resource_queue = maneger.monitor_system_resources()
+
+    # 示例：从队列中获取资源并打印
+    try:
+        while True:
+            resources = resource_queue.get(timeout=5)  # 等待最多5秒
+            print(resources)
+    except queue.Empty:
+        print("没有更多资源信息")
+    
+    time.sleep(10)
+   
     exam_json = """
     {
         "test_project": {
@@ -142,6 +179,4 @@ if __name__ == '__main__':
     """
     json_data = json.loads(exam_json)
     maneger.execute(json_data)
-    for i in range(5):
-        print(maneger.res_manager.monitor_system_resources())
     input("按任意键退出...")

@@ -6,7 +6,7 @@ import inspect
 import importlib.util
 import psutil
 import GPUtil
-import wmi
+import clr 
 
 class StrategyModule:
     _registry = {}
@@ -147,11 +147,21 @@ class StrategyModule:
 
 class ResourceModule:
     def __init__(self, ignore_prefixes=None, ignore_suffixes=None):
+    
         self.ignore_prefixes = ignore_prefixes if ignore_prefixes else [] # 忽略的文件夹前缀
         self.ignore_suffixes = ignore_suffixes if ignore_suffixes else [] # 忽略的文件后缀
         self.sys_name = "CV_WEB"
         self.sync()
-
+        
+        clr.AddReference("bin/OpenHardwareMonitorLib")
+        from OpenHardwareMonitor.Hardware import Computer 
+        self.compute = Computer()
+        self.compute.CPUEnabled = True
+        self.compute.GPUEnabled = True 
+        self.compute.HDDEnabled = True
+        self.compute.RAMEnabled = True 
+        self.compute.Open()
+        
     def get_resource_files_path(self):
         def handle_directory(directory):
             dir_list = []
@@ -208,15 +218,50 @@ class ResourceModule:
         print("==资源管理器同步完成==")
         
     def monitor_system_resources(self):
-        # 获取系统资源信息
+        # 监控系统资源信息
+        # CPU
+        cpu_load = [self.compute.Hardware[0].Sensors[a].get_Value() for a in range(len(self.compute.Hardware[0].Sensors)) if '/load' in str(self.compute.Hardware[0].Sensors[a].Identifier) and self.compute.Hardware[0].Sensors[a].get_Value() is not None]
+        cpu_temp = [self.compute.Hardware[0].Sensors[a].get_Value() for a in range(len(self.compute.Hardware[0].Sensors)) if '/temperature' in str(self.compute.Hardware[0].Sensors[a].Identifier) and self.compute.Hardware[0].Sensors[a].get_Value() is not None]
+        cpu_power = [self.compute.Hardware[0].Sensors[a].get_Value() for a in range(len(self.compute.Hardware[0].Sensors)) if '/power' in str(self.compute.Hardware[0].Sensors[a].Identifier) and self.compute.Hardware[0].Sensors[a].get_Value() is not None]
+        cpu_load = sum(cpu_load) / len(cpu_load) if len(cpu_load) > 0 else None
+        cpu_temp = sum(cpu_temp) / len(cpu_temp) if len(cpu_temp) > 0 else None
+        cpu_power = sum(cpu_power) / len(cpu_power) if len(cpu_power) > 0 else None
+
+        # RAM
+        ram_load = [self.compute.Hardware[1].Sensors[a].get_Value() for a in range(len(self.compute.Hardware[1].Sensors)) if '/load' in str(self.compute.Hardware[1].Sensors[a].Identifier) and self.compute.Hardware[1].Sensors[a].get_Value() is not None]
+        ram_load = sum(ram_load) / len(ram_load) if len(ram_load) > 0 else None
+
+        # GPU
+        gpu_load = [self.compute.Hardware[2].Sensors[a].get_Value() for a in range(len(self.compute.Hardware[2].Sensors)) if '/load' in str(self.compute.Hardware[2].Sensors[a].Identifier) and self.compute.Hardware[2].Sensors[a].get_Value() is not None]
+        gpu_temp = [self.compute.Hardware[2].Sensors[a].get_Value() for a in range(len(self.compute.Hardware[2].Sensors)) if '/temperature' in str(self.compute.Hardware[2].Sensors[a].Identifier) and self.compute.Hardware[2].Sensors[a].get_Value() is not None]
+        gpu_power = [self.compute.Hardware[2].Sensors[a].get_Value() for a in range(len(self.compute.Hardware[2].Sensors)) if '/power' in str(self.compute.Hardware[2].Sensors[a].Identifier) and self.compute.Hardware[2].Sensors[a].get_Value() is not None]
+        gpu_load = sum(gpu_load) / len(gpu_load) if len(gpu_load) > 0 else None
+        gpu_temp = sum(gpu_temp) / len(gpu_temp) if len(gpu_temp) > 0 else None
+        gpu_power = sum(gpu_power) / len(gpu_power) if len(gpu_power) > 0 else None
+
+        # HDD
+        hdd_load = [self.compute.Hardware[3].Sensors[a].get_Value() for a in range(len(self.compute.Hardware[3].Sensors)) if '/load' in str(self.compute.Hardware[3].Sensors[a].Identifier) and self.compute.Hardware[3].Sensors[a].get_Value() is not None]
+        hdd_load = sum(hdd_load) / len(hdd_load) if len(hdd_load) > 0 else None
+        
         return {
-        "cpu": psutil.cpu_percent(),
-        "mem": psutil.virtual_memory().percent,
-        "disk": psutil.disk_usage('/').percent,
-        "gpu": GPUtil.getGPUs()[0].load if GPUtil.getGPUs() else None,
-        "cpu_temp": (lambda: (wmi.WMI(namespace="root\wmi").MSAcpi_ThermalZoneTemperature()[0].CurrentTemperature / 10.0) - 273.15 if wmi else None)(),
-        "gpu_temp": GPUtil.getGPUs()[0].temperature if GPUtil.getGPUs() else None
-    }
+            "CPU": {
+                "load": cpu_load,
+                "temperature": cpu_temp,
+                "power": cpu_power
+            },
+            "RAM": {
+                "load": ram_load
+            },
+            "GPU": {
+                "load": gpu_load,
+                "temperature": gpu_temp,
+                "power": gpu_power
+            },
+            "HDD": {
+                "load": hdd_load
+            }
+        }
+
         
 class ConfigModule:
     def __init__(self, system_config_path):
