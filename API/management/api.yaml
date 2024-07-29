@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: 管理层主控端 API
-  version: 0.2.0
+  version: 0.2.1
 externalDocs:
   description: 面向高级模型用户的 CV 模型应用管理平台设计API
   url: https://github.com/EthanH3514/CV-WEB/blob/main/doc/%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1.md
@@ -19,17 +19,16 @@ externalDocs:
 #   - name: user
 #     description: Operations about user
 paths:
-  
-  /sync:
+  /sync/file/strategy:
     get:
       tags:
         - 同步
-      summary: 请求同步任务信息
+      summary: 请求同步策略注册表
       responses:
         '200':
           description: 同步成功
           content:
-            application/json: 
+            application/json:
               schema:
                 type: object
                 properties:
@@ -62,14 +61,14 @@ paths:
                   message:
                     type: string
           
-  /file/config/sync:
+  /sync/file/config:
     get:
       tags:
-        - 配置文件同步
+        - 同步
       summary: 请求同步配置文件
       responses:
         '200':
-          description: 正确
+          description: 同步成功
           content:
             application/json:
               schema:
@@ -84,19 +83,8 @@ paths:
                     properties:
                       configuration:
                         type: object
-        '404':
-          description: 未找到文件
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-        '500':
-          description: 错误
+        '501':
+          description: 同步失败
           content:
             application/json:
               schema:
@@ -107,6 +95,41 @@ paths:
                   message:
                     type: string
           
+  /sync/file/resource:
+    get:
+      tags:
+        - 同步
+      summary: 请求同步资源文件
+      responses:
+        '200':
+          description: 同步成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      configuration:
+                        type: object
+        '501':
+          description: 同步失败
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+      
+  
   /file/config:
     patch:
       tags:
@@ -144,6 +167,8 @@ paths:
                     type: boolean
                   message:
                     type: string
+  
+
   
   /file:
     post:
@@ -364,11 +389,11 @@ paths:
                   message:
                     type: string
   
-  /execute:
+  /misson:
     post:
       tags:
-        - 执行策略
-      summary: 发送策略信息
+        - 执行任务
+      summary: 基于websocket连接发送任务信息
       requestBody:
         required: true
         content:
@@ -424,6 +449,22 @@ paths:
                     type: boolean
                   message:
                     type: string
+  
+    delete:
+      tags:
+        - 停止正在运行的任务或删除等待运行的任务
+      summary: 基于websocket连接发送任务信息
+      parameters:
+        - in: query
+          name: misson_id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: 正确
+        '500':
+          description: 错误
   
   /status:
     get:
