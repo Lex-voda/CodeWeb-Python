@@ -1,0 +1,140 @@
+@startuml
+
+actor 用户
+box "前端" #LightBlue
+participant "前端" as Frontend
+end box
+
+box "操作层" #LightYellow
+participant "操作层主控端" as OperationEnd
+
+participant "操作层数据库管理端" as OpDatabaseEnd
+end box
+
+box "数据库" #9E87CA
+database "数据库" as Database
+end box
+
+participant "管理层主控端" as ManagementEnd
+
+opt 用户注册
+    Frontend -> OperationEnd: 发送注册信息
+    OperationEnd -> OpDatabaseEnd: 调用数据库管理端
+    OpDatabaseEnd --> OperationEnd: 返回注册信息验证
+    OperationEnd --> Frontend: 发送注册信息验证
+end
+
+Frontend -> OperationEnd : 发送登录信息
+OperationEnd -> OpDatabaseEnd: 调用数据库管理端
+OpDatabaseEnd -> Database: 查询登录信息
+OpDatabaseEnd --> OperationEnd: 返回登录信息验证
+OperationEnd --> Frontend: 发送登录信息验证
+alt 登录成功
+    opt 用户文件同步
+        Frontend -> OperationEnd: 请求策略注册表
+        OperationEnd -> ManagementEnd: 请求同步策略注册表
+        group 策略管理器同步
+        end
+        ManagementEnd --> OperationEnd: 发送策略注册表
+        OperationEnd --> Frontend: 发送策略注册表
+        Frontend -> OperationEnd: 请求同步配置文件
+        OperationEnd -> ManagementEnd: 请求同步配置文件
+        group 配置管理器同步
+        end
+        ManagementEnd --> OperationEnd: 发送配置文件内容
+        OperationEnd --> Frontend: 发送配置文件内容
+        Frontend -> OperationEnd: 请求同步资源文件
+        OperationEnd -> ManagementEnd: 请求同步资源文件
+        group 资源管理器同步
+        end
+        ManagementEnd --> OperationEnd: 发送项目文件目录
+        OperationEnd --> Frontend: 发送项目文件目录
+    end
+
+    opt 恢复项目现场
+        Frontend -> OperationEnd: 请求恢复项目现场
+        OperationEnd -> OpDatabaseEnd: 调用数据库管理端
+        OpDatabaseEnd --> OperationEnd: 返回项目现场信息
+        OperationEnd --> Frontend: 发送项目现场信息
+    end
+    opt 用户修改配置文件路径
+        Frontend -> OperationEnd: 发送配置文件路径
+        OperationEnd -> OpDatabaseEnd: 调用数据库管理端
+        OperationEnd -> ManagementEnd: 请求同步配置文件
+
+        ManagementEnd --> OperationEnd: 发送配置表单
+        OperationEnd --> Frontend: 发送配置表单
+    end
+    opt 用户修改配置
+        Frontend -> OperationEnd: 发送修改后的配置表单
+        OperationEnd -> ManagementEnd: 发送修改后的配置表单
+        alt 用户选择保存配置文件
+        else 用户选择覆盖配置文件
+        end
+    end
+    group 用户文件操作
+        opt 用户创建文件
+            Frontend -> OperationEnd: 发送文件路径
+            OperationEnd -> ManagementEnd: 发送文件路径
+            alt 文件后缀是.py
+            else 文件后缀是.json
+            end
+        end
+        opt 用户重命名用户文件
+            Frontend -> OperationEnd: 发送新旧用户文件路径
+            OperationEnd -> ManagementEnd: 发送新旧用户文件路径
+            alt 文件后缀是.py
+            else 文件后缀是.json
+            end
+        end
+        opt 用户删除用户文件
+            Frontend -> OperationEnd: 发送用户文件路径
+            OperationEnd -> ManagementEnd: 发送用户文件路径
+            alt 文件后缀是.py
+            else 文件后缀是.json
+            else 其他后缀
+            end
+        end
+
+        opt 用户修改文件
+            Frontend -> OperationEnd: 发送修改后的文件路径和内容
+            OperationEnd -> ManagementEnd: 发送修改后的文件路径和内容
+            alt 文件后缀是.py
+            else 文件后缀是.json
+            end
+        end
+        opt 用户查看文件
+            Frontend -> OperationEnd: 发送文件路径
+            OperationEnd -> ManagementEnd: 发送文件路径
+            alt 文件后缀是.py
+            else 文件后缀是.json
+            end
+            ManagementEnd --> OperationEnd: 发送文件内容
+            OperationEnd --> Frontend: 发送文件内容
+        end
+    end
+    opt 执行任务
+        Frontend ->> OperationEnd: 基于websockt连接发送任务信息
+        OperationEnd ->> ManagementEnd: 基于websockt连接发送任务信息
+        ManagementEnd --> OperationEnd: 发送任务结果
+        OperationEnd --> Frontend: 发送任务结果
+    end
+    opt 停止正在运行的任务或删除等待运行的任务
+        Frontend ->> OperationEnd: 基于websockt连接发送任务信息
+        OperationEnd ->> ManagementEnd: 基于websockt连接发送任务信息
+        ManagementEnd --> OperationEnd: 发送执行结果
+        OperationEnd --> Frontend: 发送执行结果
+    end
+    opt 监测用户机系统信息
+        Frontend ->> OperationEnd: 在socketweb环境中请求监控信息
+        OperationEnd ->> ManagementEnd: 在socketweb环境中请求监控信息
+        ManagementEnd --> OperationEnd: 返回监控信息
+        OperationEnd --> Frontend: 发送监控信息
+    end
+    Frontend -> OperationEnd: 发送现场信息，请求保存现场
+    OperationEnd -> OpDatabaseEnd: 调用数据库管理端
+
+else 登录失败
+end
+
+@enduml
