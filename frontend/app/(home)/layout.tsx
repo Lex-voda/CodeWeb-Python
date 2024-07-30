@@ -1,12 +1,23 @@
+import { redirect } from "next/navigation";
+import serverGetUserInfo from "../utils/serverGetUserInfo";
+import NavBar from "./components/NavBar";
+import BG from "./components/BG";
 
-export default function Layout({
+export default async function Layout({
     children,
-}: Readonly<{
+}: {
     children: React.ReactNode;
-}>) {
+}) {
+    const userInfo = await serverGetUserInfo();
+    if (!userInfo) {
+        redirect("/login");
+    }
     return (
-        <div className="w-full h-full">
-            {children}
-        </div>
+        <section>
+            <NavBar>
+                {children}
+            </NavBar>
+            <BG></BG>
+        </section>
     );
 }
