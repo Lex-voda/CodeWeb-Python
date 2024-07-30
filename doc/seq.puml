@@ -227,7 +227,7 @@ alt 登录成功
             Frontend -> Frontend: 显示文件内容
         end
     end
-    group 基于websockt连接环境的操作
+    group 基于WebSocket连接环境的操作
         opt 执行任务
             用户 -> Frontend: 配置任务
             Frontend ->> OperationEnd: [POST]发送任务信息
