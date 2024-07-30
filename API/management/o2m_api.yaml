@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: 管理层主控端 API
-  version: 0.9.5
+  version: 0.9.6
   description: 面向高级模型用户的 CV 模型应用管理平台设计API
 
 servers:
@@ -139,7 +139,9 @@ paths:
             schema: 
               type: object
               properties:
-                configuration:
+                project_name:
+                  type: string
+                content:
                   type: object
                   additionalProperties: true
       responses:
