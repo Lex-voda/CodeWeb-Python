@@ -76,8 +76,13 @@ class StrategyModule:
         return module
     
     # 获取注册表信息
-    def get_registry_info(cls):
-        return cls.registry_info
+    def get_registry_info(cls, project_name):
+        if project_name in cls.registry_info:
+            return cls.registry_info[project_name]
+        elif project_name is None:
+            return cls.registry
+        else:
+            raise ValueError(f"项目 {project_name} 未注册")
     
     # 执行项目
     def execute_project(self,project_name, project, config, output=None):
@@ -90,12 +95,13 @@ class StrategyModule:
             print(f"--开始执行项目 {project_name}--")
             for task_name, task in project.items():
                 print(f"--执行任务 {task_name}")
-                self._execute_task(project_name, task, config)
+                output_data_dict = self._execute_task(project_name, task, config)
                 print(f"==任务 {task_name} 执行完成==")
             print(f"==项目 {project_name} 执行完成==")
         finally:
             sys.stdout = original_stdout
             sys.stderr = original_stderr
+        return output_data_dict, output.getvalue()
     
     # 执行任务
     def _execute_task(self,project_name, task, config):
@@ -129,6 +135,8 @@ class StrategyModule:
                 print(f'--执行策略 {id}，策略函数为 {func_name}，参数配置为 {strategy["ARGS"]}，参数为 {kwargs}')
                 pre_output[id] = self.__execute_strategy(project_name, func_name, **kwargs)
                 print(f"==执行结果为 {pre_output[id]}")
+                
+        return {strategy_id: pre_output.get(strategy_id) for strategy_id in task['GET_OUTPUT']}
 
     # 执行策略
     def __execute_strategy(self, project, name, *args, **kwargs):
