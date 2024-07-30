@@ -2,9 +2,11 @@ openapi: 3.0.0
 info:
   title: 管理层主控端 API
   version: 0.9.5
-externalDocs:
   description: 面向高级模型用户的 CV 模型应用管理平台设计API
-  url: https://api.managementend.我是占位符.com/v1
+
+servers:
+  - url: https://api.managementend.我是占位符.com/v1
+
 # tags:
 #   - name: pet
 #     description: Everything about your Pets
@@ -84,6 +86,7 @@ paths:
                     properties:
                       configuration:
                         type: object
+                        additionalProperties: true
         '501':
           description: 同步失败
           content:
@@ -138,6 +141,7 @@ paths:
               properties:
                 configuration:
                   type: object
+                  additionalProperties: true
       responses:
         '200':
           description: 正确
