@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: 管理控制 API
-  version: 0.9.5
+  version: 0.9.7
   description: 为高级模型用户设计的 CV 模型应用管理平台 API
 
 servers:
@@ -25,6 +25,12 @@ paths:
       tags:
         - 同步
       summary: 请求同步策略注册表
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectNameRequest'
       responses:
         '200':
           description: 同步成功
@@ -40,6 +46,12 @@ paths:
       tags:
         - 同步
       summary: 请求同步配置文件
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectNameRequest'
       responses:
         '200':
           description: 同步成功
@@ -55,6 +67,12 @@ paths:
       tags:
         - 同步
       summary: 请求同步用户文件目录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectNameRequest'
       responses:
         '200':
           description: 同步成功
@@ -62,6 +80,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DirectoryResponse'
+        '501':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /sync/file/project-list:
+    get:
+      tags:
+        - 同步
+      summary: 请求项目列表
+      responses:
+        '200':
+          description: 同步成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectListResponse'
         '501':
           $ref: '#/components/responses/ErrorResponse'
       
@@ -242,6 +275,12 @@ paths:
 
 components:
   schemas:
+    ProjectNameRequest:
+      type: object
+      properties:
+        project_name:
+          type: string
+
     StrategyRegistryResponse:
       type: object
       properties:
@@ -303,6 +342,19 @@ components:
                     - type: string
                     - type: object
 
+    ProjectListResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            project_list:
+              type: array
+              items:
+                type: string
+
     ConfigurationRequest:
       type: object
       properties:
@@ -312,7 +364,6 @@ components:
           type: object
           additionalProperties: true
         
-
     FileCreationRequest:
       type: object
       properties:
