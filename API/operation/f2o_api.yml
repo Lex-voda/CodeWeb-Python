@@ -580,9 +580,9 @@ components:
         authorizationCode:
           authorizationUrl: https://auth.operationend.我是占位符.com/oauth/authorize
           tokenUrl: https://auth.operationend.我是占位符.com/oauth/token
-          scopes:   # 精简了
-            read:   读权
-            write:  写权
+          scopes:
+            read: 读权
+            write: 写权
 
   schemas:
     UserRegistration:
