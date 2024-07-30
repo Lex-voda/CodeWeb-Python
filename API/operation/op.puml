@@ -114,14 +114,14 @@ alt 登录成功
         end
     end
     opt 执行任务
-        Frontend ->> OperationEnd: 基于websockt连接发送任务信息
-        OperationEnd ->> ManagementEnd: 基于websockt连接发送任务信息
+        Frontend ->> OperationEnd: 基于WebSocket连接发送任务信息
+        OperationEnd ->> ManagementEnd: 基于WebSocket连接发送任务信息
         ManagementEnd --> OperationEnd: 发送任务结果
         OperationEnd --> Frontend: 发送任务结果
     end
     opt 停止正在运行的任务或删除等待运行的任务
-        Frontend ->> OperationEnd: 基于websockt连接发送任务信息
-        OperationEnd ->> ManagementEnd: 基于websockt连接发送任务信息
+        Frontend ->> OperationEnd: 基于WebSocket连接发送任务信息
+        OperationEnd ->> ManagementEnd: 基于WebSocket连接发送任务信息
         ManagementEnd --> OperationEnd: 发送执行结果
         OperationEnd --> Frontend: 发送执行结果
     end
