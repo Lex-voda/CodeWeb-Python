@@ -329,10 +329,20 @@ const AdminServiceApi = {
     ),
 };
 
+interface directoryRes {
+  message: "string",
+  data: {
+    file_directory: any
+  }
+}
+
+const getDirectory = async () => await instance.get<any,AxiosResponse<directoryRes>>("/sync/file/directory");
+
 const API = {
   StudentServiceApi,
   TeacherServiceApi,
   AdminServiceApi,
+  getDirectory,
 };
 
 export default API;
