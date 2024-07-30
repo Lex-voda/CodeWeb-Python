@@ -1,10 +1,10 @@
 openapi: 3.0.0
 info:
   title: 管理层主控端 API
-  version: 0.2.1
+  version: 0.9.5
 externalDocs:
   description: 面向高级模型用户的 CV 模型应用管理平台设计API
-  url: https://github.com/EthanH3514/CV-WEB/blob/main/doc/%E9%A1%B9%E7%9B%AE%E8%AE%BE%E8%AE%A1.md
+  url: https://api.managementend.我是占位符.com/v1
 # tags:
 #   - name: pet
 #     description: Everything about your Pets
@@ -32,8 +32,6 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
                   message:
                     type: string
                   data:
@@ -41,25 +39,30 @@ paths:
                     properties:
                       strategy_registry:
                         type: object
-                      configuration:
-                        type: object
-                      file_catalog:
-                        type: array
-                        items:
-                          oneOf:
-                            - type: string
-                            - type: object
+                        additionalProperties:
+                          type: object
+                          additionalProperties:
+                            type: object
+                            properties:
+                              argus:
+                                type: string
+                                  properties:
+                                    argu_name:
+                                      type: string
+                                    argus_annotation:
+                                      type: string
+                                    argus_default:
+                                      type: string
+                              return_annotation:
+                                type: string
+                              comment:
+                                type: string
         '501':
           description: 同步失败
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
+                $ref: '#/components/schemas/Error'
           
   /sync/file/config:
     get:
@@ -74,8 +77,6 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
                   message:
                     type: string
                   data:
@@ -88,18 +89,13 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
+                $ref: '#/components/schemas/Error'
           
-  /sync/file/resource:
+  /sync/file/directory:
     get:
       tags:
         - 同步
-      summary: 请求同步资源文件
+      summary: 请求同步用户文件目录
       responses:
         '200':
           description: 同步成功
@@ -108,28 +104,26 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
                   message:
                     type: string
                   data:
                     type: object
                     properties:
-                      configuration:
+                      file_directory:
                         type: object
+                        additionalProperties:
+                          type: array
+                          items:
+                            oneOf:
+                              - type: string
+                              - type: object
         '501':
           description: 同步失败
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
+                $ref: '#/components/schemas/Error'
       
-  
   /file/config:
     patch:
       tags:
@@ -152,8 +146,6 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
                   message:
                     type: string
         '500':
@@ -161,20 +153,14 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-  
+                $ref: '#/components/schemas/Error'
 
-  
+
   /file:
     post:
       tags:
         - 用户文件操作
-      summary: 创建文件
+      summary: 创建文件或文件夹
       requestBody:
         required: true
         content:
@@ -182,7 +168,7 @@ paths:
             schema:
               type: object
               properties:
-                file_path:
+                path:
                   type: string
       responses:
         '200':
@@ -192,8 +178,6 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
                   message:
                     type: string
         '500':
@@ -201,12 +185,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
+                $ref: '#/components/schemas/Error'
           
     patch:
       tags:
@@ -233,8 +212,6 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
                   message:
                     type: string
         '501':
@@ -242,23 +219,13 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
+                $ref: '#/components/schemas/Error'
         '500':
           description: 服务器错误
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
+                $ref: '#/components/schemas/Error'
           
     get:
       tags:
@@ -282,8 +249,6 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
                   message:
                     type: string
                   data:
@@ -296,23 +261,13 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
+                $ref: '#/components/schemas/Error'
         '500':
           description: 服务器错误
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
+                $ref: '#/components/schemas/Error'
           
   /file/user/file-name:
     put:
@@ -338,8 +293,6 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
                   message:
                     type: string
         '500':
@@ -347,12 +300,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
+                $ref: '#/components/schemas/Error'
           
   /file/user:
     delete:
@@ -373,8 +321,6 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
                   message:
                     type: string
         '500':
@@ -382,14 +328,34 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
+                $ref: '#/components/schemas/Error'
   
   /misson:
+    get:
+      tags:
+        - 获取任务状态
+      summary: 基于websocket连接获取任务状态
+      responses:
+        '200':
+          description: 确认
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    additionalProperties:
+                      type: object
+        '500':
+          description: 服务器错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
     post:
       tags:
         - 执行任务
@@ -400,9 +366,27 @@ paths:
           application/json:
             schema:
               type: object
-              properties:
-                strategy:
+              additionalProperties:  # 项目名称
+                type: object
+                additionalProperties:   # 任务名称
                   type: object
+                  properties:
+                    STRATEGY_QUEUE:
+                      type: array
+                      items:
+                        type: object
+                        required: [ID, FUNC, ARGS]
+                        properties:
+                          ID:
+                            type: string
+                          FUNC:
+                            type: string
+                          ARGS:
+                            type: object
+                            additionalProperties: 
+                              type: string
+                    ITER:
+                      type: boolean
       responses:
         '200':
           description: 正确
@@ -411,44 +395,19 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
                   message:
                     type: string
                   data:
                     type: object
-                    additionalProperties:  # 项目名称
+                    additionalProperties:
                       type: object
-                      additionalProperties:   # 任务名称
-                        type: object
-                        properties:
-                          STRATEGY_QUEUE:
-                            type: array
-                            items:
-                              type: object
-                              required: [ID, FUNC, ARGS]
-                              properties:
-                                ID:
-                                  type: string
-                                FUNC:
-                                  type: string
-                                ARGS:
-                                  type: object
-                                  additionalProperties: 
-                                    type: string
-                          ITER:
-                            type: boolean
+                    
         '500':
           description: 错误
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
+                $ref: '#/components/schemas/Error'
   
     delete:
       tags:
@@ -456,21 +415,32 @@ paths:
       summary: 基于websocket连接发送任务信息
       parameters:
         - in: query
-          name: misson_id
+          name: misson_name
           schema:
             type: string
           required: true
       responses:
         '200':
           description: 正确
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
         '500':
           description: 错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   
-  /status:
+  /monitor:
     get:
       tags:
         - 监测用户机系统信息
-      summary: 获取状态信息
+      summary: 获取状态信息，允许有空值
       responses:
         '200':
           description: 正确
@@ -479,21 +449,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
                   message:
                     type: string
                   data:
                     type: object
+                    properties:
+                      CPU:
+                        type: object
+                        properties:
+                          load:
+                            type: string
+                          temperature:
+                            type: string
+                          power:
+                            type: string
+                      RAM:
+                        type: object
+                        properties:
+                          load:
+                            type: string
+                      GPU:
+                        type: object
+                        properties:
+                          load:
+                            type: string
+                          temperature:
+                            type: string
+                          power:
+                            type: string
+                      HDD:
+                        type: object
+                        properties:
+                          load:
+                            type: string
         '500':
           description: 服务器错误
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
-  
+                $ref: '#/components/schemas/Error'
+              
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
