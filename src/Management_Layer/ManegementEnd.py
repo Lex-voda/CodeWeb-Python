@@ -1,6 +1,6 @@
 import os
 import sys
-import threading
+import concurrent.futures
 import ctypes
 from utils import ThreadOutputStream 
 
@@ -19,6 +19,8 @@ class ManegementEnd:
         
         self.threads = {}   # 线程表
         self.output_dict = {}   # 输出表
+        self.project_root = None   # 项目根目录绝对路径
+        self.projects = []  # 项目集
         
         self.res_manager = ResourceModule() # 资源管理器
         self.strategy_manager = StrategyModule(self.res_manager)    # 策略管理器
@@ -37,8 +39,8 @@ class ManegementEnd:
         """
         # 同步资源管理器
         self.res_manager.sync()
-        self.root = self.res_manager.project_root    # 项目根目录绝对路径
-        self.projects = self.res_manager.projects    # 项目集
+        self.project_root = self.res_manager.project_root
+        self.projects = self.res_manager.projects
         
         # 同步策略管理器
         self.strategy_manager.sync()
@@ -49,12 +51,20 @@ class ManegementEnd:
         # 链接数据库，获得用户配置文件路径，然后同步配置
         print(f"--开始同步用户配置文件--")
         for project_name in self.projects:
-            user_config_path = self.db_manager.get_project_config_path(project_name)
-            user_config_path = os.path.join(self.root, project_name, user_config_path)
-            self.config_manager.sync(project_name, user_config_path)
-            print(f"==用户配置文件{user_config_path}同步完成")
+            self.sync_user_config(project_name)
         print("==用户配置文件同步完成==")
     
+    def get_project_list(self):
+        """
+        获取项目列表
+        """
+        return self.projects
+    
+    def get_strategy_registry(self, project_name):
+        """
+        根据项目名获取策略注册表信息
+        """
+        return self.strategy_manager.get_registry_info(project_name)
     
     def get_directory_tree(self):
         """
@@ -66,19 +76,24 @@ class ManegementEnd:
         """
         执行任务
         """
-        projects = []
-        output_dict = {}
+        output_message_dict = {}
+        output_data_dict = {}
         print("--开始执行--")
-        for project_name, project in message.items():
-            output = ThreadOutputStream()
-            thread = threading.Thread(target=self._thread_wrapper, args=(project_name, project, output), name=project_name)
-            self.threads[project_name] = thread
-            projects.append(thread)
-            thread.start()
-        for thread in list(self.threads.values()):
-            thread.join()
-        print(output_dict)
+        
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future_to_project = {
+                executor.submit(self._thread_wrapper, project_name, project, ThreadOutputStream()): project_name
+                for project_name, project in message.items()
+            }
+            for future in concurrent.futures.as_completed(future_to_project):
+                project_name = future_to_project[future]
+                try:
+                    output_data_dict[project_name], output_message_dict[project_name] = future.result()
+                except Exception as exc:
+                    print(f"{project_name} 生成异常: {exc}")
+                
         print("==所有执行完成==")
+        return output_message_dict, output_data_dict
     
     def remove_thread(self, name):
         """
@@ -90,11 +105,13 @@ class ManegementEnd:
         else:
             print(f"线程 {name} 不存在")
     
-    def get_registry(self):
+    def sync_user_config(self, project_name):
         """
-        获取策略注册表
+        同步用户配置文件
         """
-        return self.strategy_manager.registry
+        user_config_path = self.db_manager.get_project_config_path(project_name)
+        user_config_path = os.path.join(self.project_root, project_name, user_config_path)
+        self.config_manager.sync(project_name, user_config_path)
     
     def update_user_config_path(self, project_name, config_path):
         """
@@ -107,7 +124,7 @@ class ManegementEnd:
         修改用户配置文件
         """
         user_config_path = self.db_manager.get_project_config_path(project_name)
-        user_config_path = os.path.join(self.root, project_name, user_config_path)
+        user_config_path = os.path.join(self.project_root, project_name, user_config_path)
         self.config_manager.write_config(user_config_path, content)
     
     def update_folder_or_file(self, past_new_path_content):
