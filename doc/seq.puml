@@ -227,40 +227,46 @@ alt 登录成功
             Frontend -> Frontend: 显示文件内容
         end
     end
-    opt 执行任务
-        用户 -> Frontend: 配置任务
-        Frontend ->> OperationEnd: [POST]基于websockt连接发送任务信息
-        OperationEnd ->> ManagementEnd: [POST]基于websockt连接发送任务信息
-        ManagementEnd -> StrategyModule: 调用策略管理器
-        StrategyModule --> ManagementEnd: 返回策略结果
-        ManagementEnd --> OperationEnd: 发送任务结果
-        note right: 200 (正确)\n500 (错误)
-        OperationEnd --> Frontend: 发送任务结果
-        note right: 200 (正确)\n500 (错误)
+    group 基于websockt连接环境的操作
+        opt 执行任务
+            用户 -> Frontend: 配置任务
+            Frontend ->> OperationEnd: [POST]发送任务信息
+            OperationEnd ->> ManagementEnd: [POST]发送任务信息
+            ManagementEnd -> StrategyModule: 调用策略管理器
+            StrategyModule --> ManagementEnd: 返回策略结果
+            ManagementEnd --> OperationEnd: 发送任务结果
+            note right: 200 (正确)\n500 (错误)
+            OperationEnd --> Frontend: 发送任务结果
+            note right: 200 (正确)\n500 (错误)
+        end
+        opt 停止正在运行的任务或删除等待运行的任务
+            用户 -> Frontend: 选择停止任务
+            Frontend ->> OperationEnd: [GET]发送任务名
+            OperationEnd ->> ManagementEnd: [GET]发送任务名
+            ManagementEnd -> StrategyModule: 调用策略管理器
+            StrategyModule --> ManagementEnd: 返回执行结果
+            ManagementEnd --> OperationEnd: 发送执行结果
+            note right: 200 (正确)\n500 (错误)
+            OperationEnd --> Frontend: 发送执行结果
+            note right: 200 (正确)\n500 (错误)
+        end
+        group 修改任务状态
+            StrategyModule --> ManagementEnd: 任务完成返回
+            ManagementEnd --> OperationEnd: 修改任务状态
+            OperationEnd --> Frontend: 修改任务状态
+        end
+        opt 监测用户机系统信息
+            Frontend ->> OperationEnd: [GET]在socketweb环境中请求监控信息
+            OperationEnd ->> ManagementEnd: [GET]在socketweb环境中请求监控信息
+            ManagementEnd --> OperationEnd: 返回监控信息
+            OperationEnd --> Frontend: 发送监控信息
+        end
+        用户 -> Frontend: 退出项目工作台
+        Frontend -> OperationEnd: [POST]发送现场信息，请求保存现场
+        note right: 200 (确认)\n500 (错误)
+        OperationEnd -> OpDatabaseEnd: 调用数据库管理端
+        OpDatabaseEnd -> Database: 写入现场信息
     end
-    opt 停止正在运行的任务或删除等待运行的任务
-        用户 -> Frontend: 选择停止任务
-        Frontend ->> OperationEnd: [GET]基于websockt连接发送任务信息
-        OperationEnd ->> ManagementEnd: [DELETE]基于websockt连接发送任务信息
-        ManagementEnd -> StrategyModule: 调用策略管理器
-        StrategyModule --> ManagementEnd: 返回执行结果
-        ManagementEnd --> OperationEnd: 发送执行结果
-        note right: 200 (正确)\n500 (错误)
-        OperationEnd --> Frontend: 发送执行结果
-        note right: 200 (正确)\n500 (错误)
-    end
-    opt 监测用户机系统信息
-        Frontend ->> OperationEnd: [GET]在socketweb环境中请求监控信息
-        OperationEnd ->> ManagementEnd: [GET]在socketweb环境中请求监控信息
-        ManagementEnd --> OperationEnd: 返回监控信息
-        OperationEnd --> Frontend: 发送监控信息
-    end
-    用户 -> Frontend: 退出项目工作台
-    Frontend -> OperationEnd: [POST]发送现场信息，请求保存现场
-    note right: 200 (确认)\n500 (错误)
-    OperationEnd -> OpDatabaseEnd: 调用数据库管理端
-    OpDatabaseEnd -> Database: 写入现场信息
-
 else 登录失败
     Frontend -> Frontend: 显示登录失败
 end
