@@ -2,7 +2,7 @@
 import Cookies from "js-cookie";
 
 export function useUserInfo() {
-  const cachedData = Cookies.get("userInfo");
+  const cachedData = Cookies.get("cvwebuserInfo");
 
   if (cachedData) {
     try {

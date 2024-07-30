@@ -39,7 +39,9 @@ const LoginCard = () => {
         setIsLoading(true);
         let success = await signUpClicked(userName, password);
         if (success) {
-            router.push("/");
+            setUserName("");
+            setPassword("");
+            setSelected("login");
         }
         setIsLoading(false);
     };
