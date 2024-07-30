@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OperationEnd API
-  version: 0.9.5
+  version: 0.9.6
   description: API for the OperationEnd component of the system
 
 servers:
@@ -168,6 +168,8 @@ paths:
             schema: 
               type: object
               properties:
+                project_name:
+                  type: string
                 configuration:
                   type: object
                   additionalProperties: true
