@@ -34,8 +34,8 @@ export default async function Home() {
             <div className="w-full max-w-xl h-[600px] no-scrollbar overflow-scroll flex flex-col items-center gap-6">
                 {projectList.map((project: string) =>
                 (
-                    <div key={project} className="w-full min-h-32 bg-white rounded-lg shadow-md flex justify-center items-center">
-                        <p>{project}</p>
+                    <div key={project} className="w-full min-h-32 bg-white rounded-lg shadow-md flex justify-center items-center cursor-pointer">
+                        <a href={`/project/${project}`}>{project}</a>
                     </div>)
                 )}
             </div>
