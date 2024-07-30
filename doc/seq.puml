@@ -92,6 +92,14 @@ alt 登录成功
         note right: 200 (同步成功)\n501 (同步失败)
         OperationEnd --> Frontend: 发送项目文件目录
         note right: 200 (同步成功)\n501 (同步失败)
+
+        Frontend -> OperationEnd: [GET]请求项目列表
+        OperationEnd -> ManagementEnd: [GET]请求项目列表
+        ManagementEnd --> OperationEnd: 返回项目列表
+        note right: 200 (获取成功)\n501 (获取失败)
+        OperationEnd --> Frontend: 发送项目列表
+        note right: 200 (获取成功)\n501 (获取失败)
+
     end
     Frontend -> Frontend: 跳转首页
     用户 -> Frontend: 选择项目
@@ -227,7 +235,7 @@ alt 登录成功
             Frontend -> Frontend: 显示文件内容
         end
     end
-    group 基于WebSocket连接环境的操作
+    group 基于websockt连接环境的操作
         opt 执行任务
             用户 -> Frontend: 配置任务
             Frontend ->> OperationEnd: [POST]发送任务信息
