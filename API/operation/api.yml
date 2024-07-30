@@ -1,0 +1,303 @@
+openapi: 3.1.0
+info:
+  title: OperationEnd API
+  version: 0.1.0
+  description: 系统OperationEnd组件的API
+
+servers:
+  - url: https://api.operationend.我是占位符.com/v1
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+      responses:
+        '200':
+          description: 注册成功
+        '400':
+          description: 无效输入
+
+  /auth/login:
+    post:
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+        '401':
+          description: 无效凭证
+
+  /policy-registry:
+    get:
+      summary: Get policy registry
+      security:
+        - bearerAuth: ['read']
+      responses:
+        '200':
+          description: 成功获取策略注册表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyRegistry'
+
+  /resource:
+    get:
+      summary: Get project file directory
+      security:
+        - bearerAuth: ['read']
+      responses:
+        '200':
+          description: 成功获取项目文件目录
+          content:
+            application/json:
+              schema:
+                type: string
+
+  /config/{path}:
+    parameters:
+      - in: path
+        name: path
+        required: true
+        schema:
+          type: string
+
+    get:
+      summary: Get configuration file
+      security:
+        - bearerAuth: ['read']
+      responses:
+        '200':
+          description: 成功获取配置文件
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Config'
+
+    put:
+      summary: Update configuration
+      security:
+        - bearerAuth: ['write']
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Config'
+      responses:
+        '200':
+          description: 成功更新配置
+
+  /files/{path}:
+    parameters:
+      - in: path
+        name: path
+        required: true
+        schema:
+          type: string
+
+    get:
+      summary: Get file content
+      security:
+        - bearerAuth: ['read']
+      responses:
+        '200':
+          description: 成功获取文件内容
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileContent'
+
+    post:
+      summary: Create a new file
+      security:
+        - bearerAuth: ['write']
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileContent'
+      responses:
+        '201':
+          description: 文件创建成功
+    put:
+      summary: Update a file
+      security:
+        - bearerAuth: ['write']
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileContent'
+      responses:
+        '200':
+          description: 文件更新成功
+
+    delete:
+      summary: Delete a file
+      security:
+        - bearerAuth: ['write']
+      responses:
+        '200':
+          description: 文件删除成功
+
+  /tasks/{taskId}:
+    parameters:
+      - in: path
+        name: taskId
+        required: true
+        schema:
+          type: string
+    post:
+      summary: Execute a task
+      security:
+        - bearerAuth: ['write']
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskExecution'
+      responses:
+        '202':
+          description: 任务已接受执行
+
+    delete:
+      summary: Stop or delete a task
+      security:
+        - bearerAuth: ['write']
+      responses:
+        '200':
+          description: 任务成功停止或删除
+
+  /monitor:
+    get:
+      summary: Get system monitoring information
+      security:
+        - bearerAuth: ['read']
+      responses:
+        '200':
+          description: 成功获取监控信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitoringInfo'
+
+  /scene/{sceneId}:
+    parameters:
+      - in: path
+        name: sceneId
+        required: true
+        schema:
+          type: string
+    post:
+      summary: Save current scene
+      security:
+        - bearerAuth: ['write']
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectScene'
+      responses:
+        '200':
+          description: 场景保存成功
+    get:
+      summary: Restore project scene
+      security:
+        - bearerAuth: ['read']
+      responses:
+        '200':
+          description: 成功响应
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectScene'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.operationend.我是占位符.com/oauth/authorize
+          tokenUrl: https://auth.operationend.我是占位符.com/oauth/token
+          scopes:
+            read: 读权
+            write: 写权
+
+  schemas:
+    UserRegistration:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+
+    UserLogin:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    AuthToken:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+        expires_in:
+          type: integer
+
+    PolicyRegistry:
+      type: object
+
+    Config:
+      type: object
+
+    ProjectScene:
+      type: object
+
+    FileContent:
+      type: object
+      properties:
+        path:
+          type: string
+        content:
+          type: string
+
+    TaskExecution:
+      type: object
+      properties:
+        taskType:
+          type: string
+        parameters:
+          type: object
+
+    MonitoringInfo:
+      type: object
