@@ -46,13 +46,13 @@ paths:
                             properties:
                               argus:
                                 type: object
-                                  properties:
-                                    argu_name:
-                                      type: string
-                                    argus_annotation:
-                                      type: string
-                                    argus_default:
-                                      type: string
+                                properties:
+                                  argu_name:
+                                    type: string
+                                  argus_annotation:
+                                    type: string
+                                  argus_default:
+                                    type: string
                               return_annotation:
                                 type: string
                               comment:
