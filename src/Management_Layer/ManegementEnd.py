@@ -109,18 +109,6 @@ if __name__ == '__main__':
     
     """
     maneger = ManegementEnd()
-    
-    resource_queue = maneger.monitor_system_resources()
-
-    # 示例：从队列中获取资源并打印
-    try:
-        while True:
-            resources = resource_queue.get(timeout=5)  # 等待最多5秒
-            print(resources)
-    except queue.Empty:
-        print("没有更多资源信息")
-    
-    time.sleep(10)
    
     exam_json = """
     {
@@ -149,8 +137,8 @@ if __name__ == '__main__':
         }
     }
     """
-    json_data = json.loads(exam_json)
-    maneger.execute(json_data)
+    # json_data = json.loads(exam_json)
+    # maneger.execute(json_data)
     exam_json = """
     {
         "test_project": {
@@ -177,6 +165,10 @@ if __name__ == '__main__':
         }
     }
     """
-    json_data = json.loads(exam_json)
-    maneger.execute(json_data)
+    
+    # json_data = json.loads(exam_json)
+    # maneger.execute(json_data)
+
+    maneger.res_manager.modify_folder_or_file((None,'Project\\new.txt','fuckyou'))
+    
     input("按任意键退出...")

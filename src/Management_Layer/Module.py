@@ -147,7 +147,11 @@ class StrategyModule:
 
 class ResourceModule:
     def __init__(self, ignore_prefixes=None, ignore_suffixes=None):
-    
+        self.project_root = None    # 项目根目录的绝对路径
+        self.root_project = None    # 项目根目录的文件夹名
+        self.directory_tree = None
+        self.projects = None
+        
         self.ignore_prefixes = ignore_prefixes if ignore_prefixes else [] # 忽略的文件夹前缀
         self.ignore_suffixes = ignore_suffixes if ignore_suffixes else [] # 忽略的文件后缀
         self.sys_name = "CV_WEB"
@@ -162,7 +166,8 @@ class ResourceModule:
         self.compute.RAMEnabled = True 
         self.compute.Open()
         
-    def get_resource_files_path(self):
+    def get_directory_tree(self):
+        # 获取项目根目录下的所有文件和文件夹
         def handle_directory(directory):
             dir_list = []
             for root, dirs, files in os.walk(directory):
@@ -175,6 +180,47 @@ class ResourceModule:
                 break  # prevent os.walk from going into subdirectories
             return dir_list
         return {os.path.basename(self.project_root): handle_directory(self.project_root)}
+    
+    def modify_folder_or_file(self, past_new_path_content):
+        past, new, content = past_new_path_content
+
+        def get_absolute_path(relative_path):
+            if relative_path:
+                if relative_path.startswith(self.root_project):
+                        relative_path = relative_path[len(self.root_project):].lstrip(os.sep)
+                return os.path.normpath(os.path.join(self.project_root, relative_path))
+            return None
+
+        past_abs = get_absolute_path(past)
+        new_abs = get_absolute_path(new)
+
+        if past and new:
+            # 重命名文件或文件夹
+            if os.path.exists(past_abs):
+                os.rename(past_abs, new_abs)
+                # 如果是文件且提供了内容，则修改文件内容
+                if os.path.isfile(new_abs) and content is not None:
+                    with open(new_abs, 'w') as f:
+                        f.write(content)
+            else:
+                print(f"Error: {past_abs} does not exist.")
+        elif past and not new:
+            # 删除文件或文件夹
+            if os.path.isdir(past_abs):
+                os.rmdir(past_abs)
+            elif os.path.isfile(past_abs):
+                os.remove(past_abs)
+            else:
+                print(f"Error: {past_abs} does not exist.")
+        elif not past and new:
+            # 创建文件或文件夹
+            if new.endswith('/'):
+                os.makedirs(new_abs, exist_ok=True)
+            else:
+                with open(new_abs, 'w') as f:
+                    f.write(content if content is not None else '')
+        else:
+            print("Error: Both past and new cannot be empty.")
     
     def restore_paths_from_dict(self, folder_dict, parent_path=''):
         paths = []
@@ -212,10 +258,12 @@ class ResourceModule:
                                 os.path.dirname(
                                     os.path.dirname(
                                         os.path.abspath(__file__))))
-        self.resource_files_path_dict = self.get_resource_files_path()
-        self.projects = [list(item.keys())[0] for item in list(self.resource_files_path_dict.values())[0] if isinstance(item, dict) and list(item.keys())[0] != self.sys_name]
-        self.resource_files_path_list = self.restore_paths_from_dict(self.resource_files_path_dict)
+        self.root_project = os.path.basename(self.project_root)
+        self.directory_tree = self.get_directory_tree()
+        self.projects = [list(item.keys())[0] for item in list(self.directory_tree.values())[0] if isinstance(item, dict) and list(item.keys())[0] != self.sys_name]
+        self.resource_files_path_list = self.restore_paths_from_dict(self.directory_tree)
         print("==资源管理器同步完成==")
+    
         
     def monitor_system_resources(self):
         # 监控系统资源信息
