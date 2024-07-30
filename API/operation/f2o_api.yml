@@ -70,7 +70,7 @@ paths:
                             type: object
                             properties:
                               argus:
-                                type: string
+                                type: object
                                   properties:
                                     argu_name:
                                       type: string
