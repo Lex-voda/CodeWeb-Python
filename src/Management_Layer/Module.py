@@ -2,10 +2,11 @@ import os
 import re
 import sys
 import json
+import time
+import threading
+import queue
 import inspect
 import importlib.util
-import psutil
-import GPUtil
 import clr 
 
 class StrategyModule:
@@ -43,7 +44,7 @@ class StrategyModule:
                 cls._registry[project] = {}
                 cls.registry_info[project] = {}
             cls._registry[project][name] = {"func": func, "signature": signature, "return_annotation": return_annotation}
-            cls.registry_info[project][name] = {"signature": signature, "return_annotation": return_annotation, "comment": comment}
+            cls.registry_info[project][name] = {"argus": [{"argu_name":param.name, "argus_annotation":str(param.annotation), "argus_default":str(param.default)} for param in signature.parameters.values()], "return_annotation": return_annotation, "comment": comment}
             return func
         return decorator
         
@@ -61,13 +62,14 @@ class StrategyModule:
         self.register_path = {task: self.resource_module.scan_for_register(task) for task in self.projects}
         for project in self.projects:
             for path in self.register_path[project]:
-                self.registry_import(path)
+                self._registry_import(path)
                 
         print("==策略注册表同步完成==")
         print(self._registry)
+        print(self.registry_info)
 
     # 通过文件路径导入模块
-    def registry_import(self, path):
+    def _registry_import(self, path):
         spec = importlib.util.spec_from_file_location(path.split('.')[0].split('\\')[-1], path)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
@@ -88,7 +90,7 @@ class StrategyModule:
             print(f"--开始执行项目 {project_name}--")
             for task_name, task in project.items():
                 print(f"--执行任务 {task_name}")
-                self.execute_task(project_name, task, config)
+                self._execute_task(project_name, task, config)
                 print(f"==任务 {task_name} 执行完成==")
             print(f"==项目 {project_name} 执行完成==")
         finally:
@@ -96,7 +98,7 @@ class StrategyModule:
             sys.stderr = original_stderr
     
     # 执行任务
-    def execute_task(self,project_name, task, config):
+    def _execute_task(self,project_name, task, config):
         pre_output = {}
         iter = [0]
         start = 0
@@ -108,7 +110,7 @@ class StrategyModule:
             for args_name, args_value in strategy["ARGS"].items():
                 kwargs[args_name] = config[args_value]
             print(f'--执行策略 {id}，策略函数为 {func_name}，参数配置为 {strategy["ARGS"]}，参数为 {kwargs}')
-            iter = self.execute_strategy(project_name, func_name, **kwargs)
+            iter = self.__execute_strategy(project_name, func_name, **kwargs)
             print("==得到迭代器对象")
             start = 1
         for i in range(len(iter)):
@@ -125,11 +127,11 @@ class StrategyModule:
                     else:
                         kwargs[args_name] = config[args_value]
                 print(f'--执行策略 {id}，策略函数为 {func_name}，参数配置为 {strategy["ARGS"]}，参数为 {kwargs}')
-                pre_output[id] = self.execute_strategy(project_name, func_name, **kwargs)
+                pre_output[id] = self.__execute_strategy(project_name, func_name, **kwargs)
                 print(f"==执行结果为 {pre_output[id]}")
 
     # 执行策略
-    def execute_strategy(self, project, name, *args, **kwargs):
+    def __execute_strategy(self, project, name, *args, **kwargs):
         if project in self._registry:
             if name in self._registry[project]:
                 # 获取注册的函数和其签名
@@ -147,6 +149,7 @@ class StrategyModule:
 
 class ResourceModule:
     def __init__(self, ignore_prefixes=None, ignore_suffixes=None):
+        
         self.project_root = None    # 项目根目录的绝对路径
         self.root_project = None    # 项目根目录的文件夹名
         self.directory_tree = None
@@ -157,6 +160,8 @@ class ResourceModule:
         self.sys_name = "CV_WEB"
         self.sync()
         
+        # 系统资源监控
+        self.monitor_queue = queue.Queue()
         clr.AddReference("bin/OpenHardwareMonitorLib")
         from OpenHardwareMonitor.Hardware import Computer 
         self.compute = Computer()
@@ -165,6 +170,18 @@ class ResourceModule:
         self.compute.HDDEnabled = True
         self.compute.RAMEnabled = True 
         self.compute.Open()
+        
+    def sync(self):
+        print("--开始同步资源管理器--")
+        self.project_root = os.path.dirname(
+                                os.path.dirname(
+                                    os.path.dirname(
+                                        os.path.abspath(__file__))))
+        self.root_project = os.path.basename(self.project_root)
+        self.directory_tree = self.get_directory_tree()
+        self.projects = [list(item.keys())[0] for item in list(self.directory_tree.values())[0] if isinstance(item, dict) and list(item.keys())[0] != self.sys_name]
+        self.resource_files_path_list = self.restore_paths_from_dict(self.directory_tree)
+        print("==资源管理器同步完成==")
         
     def get_directory_tree(self):
         # 获取项目根目录下的所有文件和文件夹
@@ -181,7 +198,7 @@ class ResourceModule:
             return dir_list
         return {os.path.basename(self.project_root): handle_directory(self.project_root)}
     
-    def modify_folder_or_file(self, past_new_path_content):
+    def update_folder_or_file(self, past_new_path_content):
         past, new, content = past_new_path_content
 
         def get_absolute_path(relative_path):
@@ -222,6 +239,10 @@ class ResourceModule:
         else:
             print("Error: Both past and new cannot be empty.")
     
+    def get_file_content(self, file_path):
+        with open(file_path, 'r') as f:
+            return f.read()
+    
     def restore_paths_from_dict(self, folder_dict, parent_path=''):
         paths = []
         for key, value in folder_dict.items():
@@ -252,21 +273,25 @@ class ResourceModule:
                             register_file.append(filepath)
         return register_file
         
-    def sync(self):
-        print("--开始同步资源管理器--")
-        self.project_root = os.path.dirname(
-                                os.path.dirname(
-                                    os.path.dirname(
-                                        os.path.abspath(__file__))))
-        self.root_project = os.path.basename(self.project_root)
-        self.directory_tree = self.get_directory_tree()
-        self.projects = [list(item.keys())[0] for item in list(self.directory_tree.values())[0] if isinstance(item, dict) and list(item.keys())[0] != self.sys_name]
-        self.resource_files_path_list = self.restore_paths_from_dict(self.directory_tree)
-        print("==资源管理器同步完成==")
+    def monitor_system_resources(self, time_interval=1):
+        """
+        在新线程中监控系统资源。
+        """
+        def monitor(time_interval):
+            while True:
+                resources = self.get_system_resources()
+                self.monitor_queue.put(resources)
+                time.sleep(time_interval)
+
+        monitor_thread = threading.Thread(target=monitor,args=(time_interval,))
+        monitor_thread.daemon = True  # 设置为守护线程
+        monitor_thread.start()
+        return monitor_thread
     
-        
-    def monitor_system_resources(self):
-        # 监控系统资源信息
+    def get_system_resources(self):
+        """
+        获取系统资源信息
+        """
         # CPU
         cpu_load = [self.compute.Hardware[0].Sensors[a].get_Value() for a in range(len(self.compute.Hardware[0].Sensors)) if '/load' in str(self.compute.Hardware[0].Sensors[a].Identifier) and self.compute.Hardware[0].Sensors[a].get_Value() is not None]
         cpu_temp = [self.compute.Hardware[0].Sensors[a].get_Value() for a in range(len(self.compute.Hardware[0].Sensors)) if '/temperature' in str(self.compute.Hardware[0].Sensors[a].Identifier) and self.compute.Hardware[0].Sensors[a].get_Value() is not None]
@@ -327,12 +352,12 @@ class ConfigModule:
         else:
             raise FileNotFoundError(f"配置文件不存在:{path}")
 
-    def write_config(self, content):
-        if self.config_path:
-            with open(self.config_path, 'w', encoding='utf-8') as file:
+    def write_config(self, path, content):
+        if os.path.exists(path):
+            with open(path, 'w', encoding='utf-8') as file:
                 json.dump(content, file, ensure_ascii=False, indent=4)
         else:
-            raise ValueError("配置文件路径未设置")
+            raise ValueError(f"配置文件不存在:{path}")
 
     def save_new_config(self, content, new_file_name):
         with open(new_file_name, 'w', encoding='utf-8') as file:
