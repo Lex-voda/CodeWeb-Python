@@ -432,6 +432,10 @@ components:
                       type: string
             ITER:
               type: boolean
+            GET_OUTPUT:
+              type: array
+              items:
+                type: string
 
     MissionResponse:
       type: object
