@@ -329,20 +329,41 @@ const AdminServiceApi = {
     ),
 };
 
-interface directoryRes {
-  message: "string",
+interface DirectoryRes {
+  message: string,
   data: {
     file_directory: any
   }
 }
 
-const getDirectory = async () => await instance.get<any,AxiosResponse<directoryRes>>("/sync/file/directory");
+interface ProjectListRes{
+  message: string,
+  data: {
+    project_list: [
+      string
+    ]
+  }
+}
+
+const getDirectory = async () => await instance.get<any, AxiosResponse<DirectoryRes>>("/sync/file/directory");
+const getProjectList = async () => await instance.get<any, AxiosResponse<ProjectListRes>>("/sync/file/project-list");
+
+interface strategyRes {
+  message: string,
+  data: {
+    strategy_registry: any
+  }
+}
+
+const getStrategy = async (project_name: string) => await instance.get<any, AxiosResponse<strategyRes>>("/sync/file/strategy", { params: { project_name: project_name } });
 
 const API = {
   StudentServiceApi,
   TeacherServiceApi,
   AdminServiceApi,
+  getProjectList,
   getDirectory,
+  getStrategy,
 };
 
 export default API;

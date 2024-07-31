@@ -1,11 +1,13 @@
-import TempFile from "./components/tempFile";
+
+import MainPage from "./components/mainPage";
+import RootDirLayout from "./components/RootDirContext";
 
 export default async function Page({ params }: { params: { projectName: string } }) {
-
     return (
-        <div className="w-full h-full flex justify-center items-center">
-            <span>{params.projectName}</span>
-            <TempFile />
-        </div>
+        <>
+            <RootDirLayout>
+                <MainPage projectName={params.projectName} />
+            </RootDirLayout>
+        </>
     );
 }

@@ -48,7 +48,8 @@ export default function NavBar({
         )}
       </div>
 
-      <div className="relative z-[1]">
+      <div className="relative z-[1] w-screen h-screen transition-[clip-path]"
+        style={{ clipPath: closed ? "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)" : "polygon(250px 0%, 100% 0%, 100% 100%, 250px 100%)" }}>
         {children}
       </div>
     </>
