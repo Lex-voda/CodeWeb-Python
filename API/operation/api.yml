@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: OperationEnd API
-  version: 0.1.0
+  version: 0.9.8
   description: 系统OperationEnd组件的API
 
 servers:
@@ -52,54 +52,171 @@ paths:
         '401':
           description: 无效凭证
 
-  /policy-registry:
+  /file/strategy:
     get:
-      summary: Get policy registry
+      tags:
+        - 同步
+      summary: 请求同步策略注册表
+      security:
+        - bearerAuth: ['read']
+      parameters:
+      - name: project_name
+        required: true
+        schema:
+            type: string
+      responses:
+        '200':
+          description: 同步成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StrategyRegistryResponse'
+        '501':
+          description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /file/directory:
+    get:
+      tags:
+        - 同步
+      summary: 请求同步项目文件目录
+      security:
+        - bearerAuth: ['read']
+      parameters:
+      - name: project_name
+        required: true
+        schema:
+            type: string
+      responses:
+        '200':
+          description: 同步成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirectoryResponse'
+        '501':
+          description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /file/project-list:
+    get:
+      tags:
+        - 同步
+      summary: 请求项目列表
       security:
         - bearerAuth: ['read']
       responses:
         '200':
-          description: 成功获取策略注册表
+          description: 同步成功
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PolicyRegistry'
-
-  /resource:
+                $ref: '#/components/schemas/ProjectListResponse'
+        '501':
+          description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /file/config:
     get:
-      summary: Get project file directory
+      tags:
+        - 配置
+      summary: 请求同步配置文件
       security:
         - bearerAuth: ['read']
+      parameters:
+      - name: project_name
+        required: true
+        schema:
+            type: string
       responses:
         '200':
-          description: 成功获取项目文件目录
+          description: 同步成功
           content:
             application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/ConfigurationResponse'
+        '501':
+          description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - 配置
+      summary: 发送修改后的配置表单
+      security:
+        - bearerAuth: ['write']
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: 
+              $ref: '#/components/schemas/ConfigurationRequest'
+      responses:
+        '200':
+          description: SuccessResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '500':
+          description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - 配置
+      summary: 修改配置文件路径
+      security:
+        - bearerAuth: ['write']
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: 
+              type: object
+              properties:
+                project_name:
+                  type: string
+                  description: 项目名
+                file_path:
+                  type: string
+                  description: 文件路径
+      responses:
+        '200':
+          description: SuccessResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '500':
+          description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /config/{path}:
+  /file:
     parameters:
-      - in: path
-        name: path
+      - name: file_path
+        in: query
         required: true
         schema:
           type: string
-
-    get:
-      summary: Get configuration file
-      security:
-        - bearerAuth: ['read']
-      responses:
-        '200':
-          description: 成功获取配置文件
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Config'
-
-    put:
-      summary: Update configuration
+        description: 文件路径
+    post:
+      tags:
+        - 文件操作
+      summary: 创建文件或文件夹
       security:
         - bearerAuth: ['write']
       requestBody:
@@ -107,21 +224,55 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Config'
+              $ref: '#/components/schemas/FileCreationRequest'
       responses:
         '200':
-          description: 成功更新配置
-
-  /files/{path}:
-    parameters:
-      - in: path
-        name: path
+          description: SuccessResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '500':
+          description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - 文件操作
+      summary: 修改文件内容
+      security:
+        - bearerAuth: ['write']
+      requestBody:
         required: true
-        schema:
-          type: string
-
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileModificationRequest'
+      responses:
+        '200':
+          description: SuccessResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '501':
+          description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     get:
-      summary: Get file content
+      tags:
+        - 文件操作
+      summary: 查看文件内容
       security:
         - bearerAuth: ['read']
       responses:
@@ -130,10 +281,23 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FileContent'
-
-    post:
-      summary: Create a new file
+                $ref: '#/components/schemas/FileContentResponse'
+        '404':
+          description: NotFoundResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      tags:
+        - 文件操作
+      summary: 重命名用户文件
       security:
         - bearerAuth: ['write']
       requestBody:
@@ -141,73 +305,130 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/FileContent'
-      responses:
-        '201':
-          description: 文件创建成功
-    put:
-      summary: Update a file
-      security:
-        - bearerAuth: ['write']
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FileContent'
+              type: string
+              description: 新文件名
       responses:
         '200':
-          description: 文件更新成功
-
+          description: SuccessResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '500':
+          description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
-      summary: Delete a file
+      tags:
+        - 文件操作
+      summary: 删除用户文件
       security:
         - bearerAuth: ['write']
       responses:
         '200':
-          description: 文件删除成功
-
-  /tasks/{taskId}:
-    parameters:
-      - in: path
-        name: taskId
-        required: true
-        schema:
-          type: string
-    post:
-      summary: Execute a task
-      security:
-        - bearerAuth: ['write']
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TaskExecution'
-      responses:
-        '202':
-          description: 任务已接受执行
-
-    delete:
-      summary: Stop or delete a task
-      security:
-        - bearerAuth: ['write']
-      responses:
-        '200':
-          description: 任务成功停止或删除
-
-  /monitor:
+          description: SuccessResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '500':
+          description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /mission:
     get:
-      summary: Get system monitoring information
+      tags:
+        - 任务管理
+      summary: 通过 WebSocket 连接获取任务状态
       security:
         - bearerAuth: ['read']
       responses:
         '200':
-          description: 成功获取监控信息
+          description: 成功获取任务状态
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MonitoringInfo'
+                $ref: '#/components/schemas/MissionStatusResponse'
+        '500':
+          description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - 任务管理
+      summary: 通过 WebSocket 连接发送任务信息
+      security:
+        - bearerAuth: ['write']
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MissionRequest'
+      responses:
+        '200':
+          description: 成功发送任务信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissionResponse'
+        '500':
+          description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+        - 任务管理
+      summary: 停止运行中的任务或删除等待中的任务
+      security:
+        - bearerAuth: ['write']
+      parameters:
+        - in: query
+          name: mission_name
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: SuccessResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '500':
+          description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /monitor:
+    get:
+      tags:
+        - 系统监控
+      summary: 获取系统状态信息（允许空值）
+      security:
+        - bearerAuth: ['read']
+      responses:
+        '200':
+          description: 成功获取系统状态
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemStatusResponse'
+        '500':
+          description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/sschemas/ErrorResponse'
 
   /scene/{sceneId}:
     parameters:
@@ -229,6 +450,16 @@ paths:
       responses:
         '200':
           description: 场景保存成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '500':
+          description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     get:
       summary: Restore project scene
       security:
@@ -240,6 +471,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProjectScene'
+        '500':
+          description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
 components:
   securitySchemes:
@@ -284,30 +521,203 @@ components:
         expires_in:
           type: integer
 
-    PolicyRegistry:
+    StrategyRegistryResponse:
       type: object
-
-    Config:
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            strategy_registry:
+              type: object
+              additionalProperties:
+                $ref: '#/components/schemas/StrategyInfo'
+    StrategyInfo:
       type: object
-
-    ProjectScene:
+      properties:
+        argus:
+          type: object
+          properties:
+            argu_name:
+              type: string
+            argu_annotation:
+              type: string
+            argu_default:
+              type: string
+        return_annotation:
+          type: string
+        comment:
+          type: string
+    ConfigurationResponse:
       type: object
-
-    FileContent:
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            configuration:
+              type: object
+              additionalProperties: true
+    DirectoryResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            file_directory:
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  oneOf:
+                    - type: string
+                    - type: object
+    ProjectListResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            project_list:
+              type: array
+              items:
+                type: string
+    ConfigurationRequest:
+      type: object
+      properties:
+        project_name:
+          type: string
+        content:
+          type: object
+          additionalProperties: true
+    FileCreationRequest:
       type: object
       properties:
         path:
           type: string
-        content:
-          type: string
-
-    TaskExecution:
+    FileModificationRequest:
       type: object
       properties:
-        taskType:
+        file_path:
           type: string
-        parameters:
-          type: object
-
-    MonitoringInfo:
+          description: 文件路径
+        content:
+          type: string
+          description: 文件内容
+    FileContentResponse:
       type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            content:
+              type: string
+    MissionStatusResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          additionalProperties:
+            type: object
+    MissionRequest:
+      type: object
+      additionalProperties:
+        type: object
+        additionalProperties:
+          type: object
+          properties:
+            STRATEGY_QUEUE:
+              type: array
+              items:
+                type: object
+                required: [ID, FUNC, ARGS]
+                properties:
+                  ID:
+                    type: string
+                  FUNC:
+                    type: string
+                  ARGS:
+                    type: object
+                    additionalProperties: 
+                      type: string
+            ITER:
+              type: boolean
+            GET_OUTPUT:
+              type: array
+              items:
+                type: string
+    MissionResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          additionalProperties:
+            type: object
+    SystemStatusResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            CPU:
+              type: object
+              properties:
+                load:
+                  type: string
+                temperature:
+                  type: string
+                power:
+                  type: string
+            RAM:
+              type: object
+              properties:
+                load:
+                  type: string
+            GPU:
+              type: object
+              properties:
+                load:
+                  type: string
+                temperature:
+                  type: string
+                power:
+                  type: string
+            HDD:
+              type: object
+              properties:
+                load:
+                  type: string
+    ProjectScene:
+      type: object
+      properties:
+        project_name:
+          type: string
+        scene:
+          type: object
+          additionalProperties: true 
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    
+    SuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
