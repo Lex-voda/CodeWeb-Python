@@ -6,7 +6,17 @@ info:
 
 servers:
   - url: https://api.operationend.我是占位符.com/v1
-
+tags:
+  - name: 同步
+    description: 用于同步各种数据的端点
+  - name: 配置
+    description: 用于管理用户配置的端点
+  - name: 文件操作
+    description: 用于文件和目录管理的端点
+  - name: 任务管理
+    description: 用于管理和监控任务的端点
+  - name: 系统监控
+    description: 用于监控系统资源的端点
 paths:
   /auth/register:
     post:
