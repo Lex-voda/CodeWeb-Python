@@ -3,10 +3,8 @@ info:
   title: 管理控制 API
   version: 0.9.7
   description: 为高级模型用户设计的 CV 模型应用管理平台 API
-
 servers:
   - url: https://api.managementend.example.com/v1
-
 tags:
   - name: 同步
     description: 用于同步各种数据的端点
@@ -18,19 +16,17 @@ tags:
     description: 用于管理和监控任务的端点
   - name: 系统监控
     description: 用于监控系统资源的端点
-
 paths:
-  /sync/file/strategy:
+  /file/strategy:
     get:
       tags:
         - 同步
       summary: 请求同步策略注册表
-      requestBody:
+      parameters:
+      - name: project_name
         required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProjectNameRequest'
+        schema:
+            type: string
       responses:
         '200':
           description: 同步成功
@@ -39,40 +35,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/StrategyRegistryResponse'
         '501':
-          $ref: '#/components/responses/ErrorResponse'
-          
-  /sync/file/config:
+          description: ErrorResponse
+  /file/directory:
     get:
       tags:
         - 同步
-      summary: 请求同步配置文件
-      requestBody:
+      summary: 请求同步项目文件目录
+      parameters:
+      - name: project_name
         required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProjectNameRequest'
-      responses:
-        '200':
-          description: 同步成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConfigurationResponse'
-        '501':
-          $ref: '#/components/responses/ErrorResponse'
-          
-  /sync/file/directory:
-    get:
-      tags:
-        - 同步
-      summary: 请求同步用户文件目录
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProjectNameRequest'
+        schema:
+            type: string
       responses:
         '200':
           description: 同步成功
@@ -81,9 +54,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/DirectoryResponse'
         '501':
-          $ref: '#/components/responses/ErrorResponse'
-
-  /sync/file/project-list:
+          description: ErrorResponse
+  /file/project-list:
     get:
       tags:
         - 同步
@@ -96,10 +68,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProjectListResponse'
         '501':
-          $ref: '#/components/responses/ErrorResponse'
-      
+          description: ErrorResponse
   /file/config:
-    patch:
+    get:
+      tags:
+        - 配置
+      summary: 请求同步配置文件
+      parameters:
+      - name: project_name
+        required: true
+        schema:
+            type: string
+      responses:
+        '200':
+          description: 同步成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationResponse'
+        '501':
+          description: ErrorResponse
+    put:
       tags:
         - 配置
       summary: 发送修改后的配置表单
@@ -111,11 +100,17 @@ paths:
               $ref: '#/components/schemas/ConfigurationRequest'
       responses:
         '200':
-          $ref: '#/components/responses/SuccessResponse'
+          description: SuccessResponse
         '500':
-          $ref: '#/components/responses/ErrorResponse'
-
+          description: ErrorResponse
   /file:
+    parameters:
+      - name: file_path
+        in: query
+        required: true
+        schema:
+          type: string
+        description: 文件路径
     post:
       tags:
         - 文件操作
@@ -128,11 +123,10 @@ paths:
               $ref: '#/components/schemas/FileCreationRequest'
       responses:
         '200':
-          $ref: '#/components/responses/SuccessResponse'
+          description: SuccessResponse
         '500':
-          $ref: '#/components/responses/ErrorResponse'
-          
-    patch:
+          description: ErrorResponse
+    put:
       tags:
         - 文件操作
       summary: 修改文件内容
@@ -144,23 +138,15 @@ paths:
               $ref: '#/components/schemas/FileModificationRequest'
       responses:
         '200':
-          $ref: '#/components/responses/SuccessResponse'
+          description: SuccessResponse
         '501':
-          $ref: '#/components/responses/ErrorResponse'
+          description: ErrorResponse
         '500':
-          $ref: '#/components/responses/ErrorResponse'
-          
+          description: ErrorResponse
     get:
       tags:
         - 文件操作
       summary: 查看文件内容
-      parameters:
-        - name: file_path
-          in: query
-          required: true
-          schema:
-            type: string
-          description: 文件路径
       responses:
         '200':
           description: 成功获取文件内容
@@ -169,12 +155,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/FileContentResponse'
         '404':
-          $ref: '#/components/responses/NotFoundResponse'
+          description: NotFoundResponse
         '500':
-          $ref: '#/components/responses/ErrorResponse'
-          
-  /file/user/file-name:
-    put:
+          description: ErrorResponse
+    patch:
       tags:
         - 文件操作
       summary: 重命名用户文件
@@ -183,30 +167,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/FileRenameRequest'
+              type: string
+              description: 新文件名
       responses:
         '200':
-          $ref: '#/components/responses/SuccessResponse'
+          description: SuccessResponse
         '500':
-          $ref: '#/components/responses/ErrorResponse'
-          
-  /file/user:
+          description: ErrorResponse
     delete:
       tags:
         - 文件操作
       summary: 删除用户文件
-      parameters:
-        - in: query
-          name: file_path
-          schema:
-            type: string
-          required: true
       responses:
         '200':
-          $ref: '#/components/responses/SuccessResponse'
+          description: SuccessResponse
         '500':
-          $ref: '#/components/responses/ErrorResponse'
-  
+          description: ErrorResponse
   /mission:
     get:
       tags:
@@ -220,8 +196,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/MissionStatusResponse'
         '500':
-          $ref: '#/components/responses/ErrorResponse'
-
+          description: ErrorResponse
     post:
       tags:
         - 任务管理
@@ -240,8 +215,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/MissionResponse'
         '500':
-          $ref: '#/components/responses/ErrorResponse'
-  
+          description: ErrorResponse
     delete:
       tags:
         - 任务管理
@@ -254,10 +228,9 @@ paths:
           required: true
       responses:
         '200':
-          $ref: '#/components/responses/SuccessResponse'
+          description: SuccessResponse
         '500':
-          $ref: '#/components/responses/ErrorResponse'
-  
+          description: ErrorResponse
   /monitor:
     get:
       tags:
@@ -271,16 +244,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/SystemStatusResponse'
         '500':
-          $ref: '#/components/responses/ErrorResponse'
-
+          description: ErrorResponse
 components:
   schemas:
-    ProjectNameRequest:
-      type: object
-      properties:
-        project_name:
-          type: string
-
     StrategyRegistryResponse:
       type: object
       properties:
@@ -293,7 +259,6 @@ components:
               type: object
               additionalProperties:
                 $ref: '#/components/schemas/StrategyInfo'
-
     StrategyInfo:
       type: object
       additionalProperties:
@@ -312,7 +277,6 @@ components:
             type: string
           comment:
             type: string
-
     ConfigurationResponse:
       type: object
       properties:
@@ -324,7 +288,6 @@ components:
             configuration:
               type: object
               additionalProperties: true
-
     DirectoryResponse:
       type: object
       properties:
@@ -341,7 +304,6 @@ components:
                   oneOf:
                     - type: string
                     - type: object
-
     ProjectListResponse:
       type: object
       properties:
@@ -354,7 +316,6 @@ components:
               type: array
               items:
                 type: string
-
     ConfigurationRequest:
       type: object
       properties:
@@ -363,13 +324,11 @@ components:
         content:
           type: object
           additionalProperties: true
-        
     FileCreationRequest:
       type: object
       properties:
         path:
           type: string
-
     FileModificationRequest:
       type: object
       properties:
@@ -379,7 +338,6 @@ components:
         content:
           type: string
           description: 文件内容
-
     FileContentResponse:
       type: object
       properties:
@@ -390,15 +348,6 @@ components:
           properties:
             content:
               type: string
-
-    FileRenameRequest:
-      type: object
-      properties:
-        new_file_path:
-          type: string
-        old_file_path:
-          type: string
-
     MissionStatusResponse:
       type: object
       properties:
@@ -408,7 +357,6 @@ components:
           type: object
           additionalProperties:
             type: object
-
     MissionRequest:
       type: object
       additionalProperties:
@@ -436,7 +384,6 @@ components:
               type: array
               items:
                 type: string
-
     MissionResponse:
       type: object
       properties:
@@ -446,7 +393,6 @@ components:
           type: object
           additionalProperties:
             type: object
-
     SystemStatusResponse:
       type: object
       properties:
@@ -483,34 +429,3 @@ components:
               properties:
                 load:
                   type: string
-
-  responses:
-    SuccessResponse:
-      description: 操作成功
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-
-    ErrorResponse:
-      description: 发生错误
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-
-    NotFoundResponse:
-      description: 未找到资源
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
