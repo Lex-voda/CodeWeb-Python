@@ -586,3 +586,11 @@ components:
               properties:
                 load:
                   type: string
+    ProjectScene:
+      type: object
+      properties:
+        project_name:
+          type: string
+        scene:
+          type: object
+          additionalProperties: true 
