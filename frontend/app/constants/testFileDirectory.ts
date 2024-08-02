@@ -178,7 +178,7 @@ export const testFileDirectory = {
             ]
         },
         {
-            "CV_WEB": [
+            "Code_WEB": [
                 {
                     "Management_Layer": [
                         {

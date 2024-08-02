@@ -7,8 +7,8 @@ import Head from "next/head";
 import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
-  title: "CV-WEB",
-  description: "CV-WEB",
+  title: "Code-WEB",
+  description: "Code-WEB",
 };
 
 const inter = Inter({ subsets: ["latin"] });
