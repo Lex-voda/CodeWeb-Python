@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: 管理控制 API
-  version: 0.9.7
+  version: 0.9.8
   description: 为高级模型用户设计的 CV 模型应用管理平台 API
 servers:
   - url: https://api.managementend.example.com/v1
