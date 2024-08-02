@@ -1,6 +1,6 @@
 "use client";
 import { testStrategy } from "@/app/constants/testStrategy";
-import { StrategyContent } from "@/app/interfaces/project";
+import { Mission, StrategyContent } from "@/app/interfaces/project";
 import API from "@/app/utils/api";
 import { useEffect, useState } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
@@ -21,10 +21,17 @@ import {
 import { BiSolidEdit } from "react-icons/bi";
 import SingleInputModal from "./singleInputModal";
 import useWindow from "@/app/hooks/useWindow";
+import MissionBlock from "./missionBlock";
+import { randomColor } from "@/app/utils/randomColor";
+import { IoAddSharp } from "react-icons/io5";
+import AddMissionModal from "./addMissionModal";
 
 export default function MainPage({ projectName }: { projectName: string }) {
   const [closed, setClosed] = useState(false);
   const { width: windowWidth } = useWindow();
+  const [missionColors, setMissionColors] = useState<Array<string>>(
+    randomColor(100, 0.4)
+  );
 
   // message list
   const [messageList, setMessageList] = useState<Array<string>>([]);
@@ -38,7 +45,7 @@ export default function MainPage({ projectName }: { projectName: string }) {
   const [configTable, setConfigTable] = useState<any>({});
 
   // 获取配置表
-  useEffect(() => {
+  const getConfigTable = async () => {
     if (process.env.NEXT_PUBLIC_TEST === "test") {
       setConfigTable(testConfig);
       setMessageList([...messageList, "test: 获取配置文件成功！"]);
@@ -54,15 +61,9 @@ export default function MainPage({ projectName }: { projectName: string }) {
         error("获取配置文件失败！");
       }
     });
-  }, []);
-
-  // 查看策略注册表
-  const {
-    isOpen: isStrategyOpen,
-    onOpen: onStrategyOpen,
-    onOpenChange: onStrategyOpenChange,
-  } = useDisclosure();
-  const handleCheckStrategy = async () => {
+  };
+  // 获取策略注册表
+  const getStrategyTable = async () => {
     if (process.env.NEXT_PUBLIC_TEST === "test") {
       setStrategyTable(testStrategy);
       setMessageList([...messageList, "test: 获取策略注册表成功！"]);
@@ -78,8 +79,18 @@ export default function MainPage({ projectName }: { projectName: string }) {
       });
       setStrategyTable(strategytable);
     }
-    onStrategyOpen();
   };
+  useEffect(() => {
+    getConfigTable();
+    getStrategyTable();
+  }, []);
+
+  // 查看策略注册表
+  const {
+    isOpen: isStrategyOpen,
+    onOpen: onStrategyOpen,
+    onOpenChange: onStrategyOpenChange,
+  } = useDisclosure();
 
   // 更新可用策略
   useEffect(() => {
@@ -156,7 +167,43 @@ export default function MainPage({ projectName }: { projectName: string }) {
   };
 
   // 任务表
-  const [missionTable, setMissionTable] = useState<any>({});
+  const [missionTable, setMissionTable] = useState<Array<Mission>>([]);
+  const {
+    isOpen: isAddMissionOpen,
+    onOpen: onAddMissionOpen,
+    onOpenChange: onAddMissionOpenChange,
+  } = useDisclosure();
+  const handleAddMission = (missionName: string, iterable: boolean) => {
+    setMissionTable((prev) => {
+      return [
+        ...prev,
+        {
+          name: missionName,
+          STRATEGY_QUEUE: [],
+          ITER: iterable,
+          GET_OUTPUT: [],
+        },
+      ];
+    });
+  };
+  const handleStartMission = (index: number) => {
+    // posted mission: missionTable[index]
+    let missionData: any = {};
+    let tempMission: any = { ...missionTable[index] };
+    delete tempMission["name"];
+    missionData[projectName] = {};
+    missionData[projectName][missionTable[index].name] = tempMission;
+    console.log("posted mission: ", missionData);
+    setCurrentMission(missionTable[index].name);
+  };
+
+  const handleStopMission = (index: number) => {
+    console.log("stop mission: ", missionTable[index].name);
+    setCurrentMission("");
+  };
+
+  // 当前运行任务
+  const [currentMission, setCurrentMission] = useState<string>("");
 
   return (
     <>
@@ -173,7 +220,7 @@ export default function MainPage({ projectName }: { projectName: string }) {
         <div className="min-w-[136px] flex flex-col gap-2 text-sm">
           <div
             className="w-full flex gap-2 items-center cursor-pointer p-2 bg-[#33333322] hover:bg-[#33333377] transition-background rounded-lg"
-            onClick={handleCheckStrategy}
+            onClick={onStrategyOpen}
           >
             <FiLogOut />
             <span>查看策略注册表</span>
@@ -254,10 +301,30 @@ export default function MainPage({ projectName }: { projectName: string }) {
             </Table>
           </div>
           {/* mission part */}
-          <div className="w-full h-[60%] flex flex-col gap-2 p-4 rounded-xl bg-[#66666622]">
+          <div className="w-full h-[60%] flex flex-col gap-2 p-4 rounded-xl bg-[#66666622] overflow-scroll no-scrollbar">
             <p>任务块：</p>
-            <div className="w-full h-full flex flex-col gap-2 overflow-scroll no-scrollbar">
-              {}
+            <div className="w-full h-fit flex flex-col gap-2">
+              {missionTable.map((mission, index) => (
+                <MissionBlock
+                  missionIndex={index}
+                  mission={mission}
+                  missionTable={missionTable}
+                  currentMission={currentMission}
+                  missionColor={missionColors[index]}
+                  strategyNames={strategyNames}
+                  strategyContents={strategyContents}
+                  setMissionTable={setMissionTable}
+                  handleStartMission={handleStartMission}
+                  handleStopMission={handleStopMission}
+                />
+              ))}
+              {/* add mission */}
+              <div
+                className="w-20 h-20 flex justify-center items-center border-dashed border-2 border-[#ffffff66] cursor-pointer"
+                onClick={onAddMissionOpen}
+              >
+                <IoAddSharp className="size-14 text-[#ffffff66]" />
+              </div>
             </div>
           </div>
         </div>
@@ -294,6 +361,13 @@ export default function MainPage({ projectName }: { projectName: string }) {
         isOpen={isConfigOpen}
         onOpenChange={onConfigOpenChange}
         handleConfig={handleConfig}
+      />
+
+      {/* add mission modal */}
+      <AddMissionModal
+        isOpen={isAddMissionOpen}
+        onOpenChange={onAddMissionOpenChange}
+        handleConfirm={handleAddMission}
       />
     </>
   );
