@@ -24,6 +24,11 @@ export default function EditModal({
             console.log(contentRef.current?.innerText);
             success("保存成功！");
         }
+        // innerHTML=innerHTML.replace(/<div>/g, "\n").replace(/<\/div>/g, "");
+        // 初始innerText，初始innerHTML
+        // 高亮原理
+        // highlightElement原理
+        // contentEditable原理
         // else{
         //     if (contentRef.current) {
         //         hljs.highlightElement(contentRef.current);

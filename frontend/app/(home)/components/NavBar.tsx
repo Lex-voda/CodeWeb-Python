@@ -10,7 +10,6 @@ export default function NavBar({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
   const [closed, setClosed] = useState(false);
   const router = useRouter();
 
@@ -18,17 +17,27 @@ export default function NavBar({
     <>
       <div
         className="fixed h-screen w-60 left-0 top-0 z-50 flex flex-col justify-between py-3 overflow-hidden transition-all bg-[#33333344] text-white"
-        style={{ width: closed ? "0" : "240px", paddingLeft: closed ? "0" : "12px", paddingRight: closed ? "0" : "12px" }}
+        style={{
+          width: closed ? "0" : "240px",
+          paddingLeft: closed ? "0" : "12px",
+          paddingRight: closed ? "0" : "12px",
+        }}
       >
         {/* top part */}
         <div className="min-w-[216px] flex flex-col gap-2">
-          <div className="w-full flex gap-2 text-lg items-center cursor-pointer" onClick={() => router.push("/")}>
-            <span className="font-bold animate-brand">CV-WEB</span>
+          <div
+            className="w-full flex gap-2 text-lg items-center cursor-pointer"
+            onClick={() => router.push("/")}
+          >
+            <span className="font-bold animate-brand">Code-WEB</span>
           </div>
         </div>
         {/* bottom part */}
         <div className="min-w-[216px] flex flex-col gap-2">
-          <div className="w-full flex gap-2 text-md items-center cursor-pointer p-2 bg-[#33333322] hover:bg-[#33333377] transition-background rounded-lg" onClick={logoutClicked}>
+          <div
+            className="w-full flex gap-2 text-md items-center cursor-pointer p-2 bg-[#33333322] hover:bg-[#33333377] transition-background rounded-lg"
+            onClick={logoutClicked}
+          >
             <FiLogOut />
             <span>退出登录</span>
           </div>
@@ -41,14 +50,17 @@ export default function NavBar({
         style={{ transform: closed ? "translateX(-240px)" : "translateX(0)" }}
         onClick={(e) => setClosed(!closed)}
       >
-        {closed ? (
-          <FaChevronRight />
-        ) : (
-          <FaChevronLeft />
-        )}
+        {closed ? <FaChevronRight /> : <FaChevronLeft />}
       </div>
 
-      <div className="relative z-[1]">
+      <div
+        className="relative z-[1] w-screen h-screen transition-[clip-path]"
+        style={{
+          clipPath: closed
+            ? "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+            : "polygon(250px 0%, 100% 0%, 100% 100%, 250px 100%)",
+        }}
+      >
         {children}
       </div>
     </>

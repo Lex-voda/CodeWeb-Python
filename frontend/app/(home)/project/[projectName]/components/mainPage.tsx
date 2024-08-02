@@ -1,0 +1,300 @@
+"use client";
+import { testStrategy } from "@/app/constants/testStrategy";
+import { StrategyContent } from "@/app/interfaces/project";
+import API from "@/app/utils/api";
+import { useEffect, useState } from "react";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FiLogOut } from "react-icons/fi";
+import StrategyModal from "./strategyModal";
+import { useDisclosure } from "@nextui-org/react";
+import ConfigModal from "./configModal";
+import { error, success } from "@/app/utils/message";
+import { testConfig } from "@/app/constants/testConfig";
+import {
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@nextui-org/react";
+import { BiSolidEdit } from "react-icons/bi";
+import SingleInputModal from "./singleInputModal";
+import useWindow from "@/app/hooks/useWindow";
+
+export default function MainPage({ projectName }: { projectName: string }) {
+  const [closed, setClosed] = useState(false);
+  const { width: windowWidth } = useWindow();
+
+  // message list
+  const [messageList, setMessageList] = useState<Array<string>>([]);
+
+  const [strategyTable, setStrategyTable] = useState<any>({});
+  const [strategyContents, setStrategyContents] = useState<
+    Array<StrategyContent>
+  >([]);
+  const [strategyNames, setStrategyNames] = useState<string[]>([]);
+
+  const [configTable, setConfigTable] = useState<any>({});
+
+  // 获取配置表
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_TEST === "test") {
+      setConfigTable(testConfig);
+      setMessageList([...messageList, "test: 获取配置文件成功！"]);
+      return;
+    }
+    API.getConfig(projectName).then((res) => {
+      if (res.status === 200) {
+        if (res.data.message)
+          setMessageList([...messageList, res.data.message]);
+        success("获取配置文件成功！");
+        setConfigTable(res.data.data?.configuration);
+      } else {
+        error("获取配置文件失败！");
+      }
+    });
+  }, []);
+
+  // 查看策略注册表
+  const {
+    isOpen: isStrategyOpen,
+    onOpen: onStrategyOpen,
+    onOpenChange: onStrategyOpenChange,
+  } = useDisclosure();
+  const handleCheckStrategy = async () => {
+    if (process.env.NEXT_PUBLIC_TEST === "test") {
+      setStrategyTable(testStrategy);
+      setMessageList([...messageList, "test: 获取策略注册表成功！"]);
+    } else {
+      const strategytable = API.getStrategy(projectName).then((res) => {
+        if (res.status === 200) {
+          success("获取策略注册表成功！");
+          setMessageList([...messageList, res.data.message]);
+          return res.data.data.strategy_registry;
+        } else {
+          error("获取策略注册表失败！");
+        }
+      });
+      setStrategyTable(strategytable);
+    }
+    onStrategyOpen();
+  };
+
+  // 更新可用策略
+  useEffect(() => {
+    setStrategyNames(Object.keys(strategyTable));
+    let strategyCons: Array<StrategyContent> = [];
+    for (let i = 0; i < Object.keys(strategyTable).length; i++) {
+      strategyCons.push(strategyTable[Object.keys(strategyTable)[i]]);
+    }
+    setStrategyContents(strategyCons);
+  }, [strategyTable]);
+
+  // 选择配置文件
+  const {
+    isOpen: isConfigOpen,
+    onOpen: onConfigOpen,
+    onOpenChange: onConfigOpenChange,
+  } = useDisclosure();
+  const handleConfig = async (path: string) => {
+    if (process.env.NEXT_PUBLIC_TEST === "test") {
+      success("配置文件路径成功!");
+      setMessageList([...messageList, "test: 配置文件路径成功！"]);
+      return;
+    }
+    API.postConfig({ file_path: path, project_name: projectName }).then(
+      (res) => {
+        if (res.status != 200) {
+          error("配置文件路径失败!");
+        } else {
+          success("配置文件路径成功!");
+          if (res.data.message)
+            setMessageList([...messageList, res.data.message]);
+        }
+      }
+    );
+    API.getConfig(projectName).then((res) => {
+      if (res.status === 200) {
+        if (res.data.message)
+          setMessageList([...messageList, res.data.message]);
+        success("获取配置文件成功！");
+        setConfigTable(res.data.data?.configuration);
+      } else {
+        error("获取配置文件失败！");
+      }
+    });
+  };
+
+  // 修改配置项
+  const [modifyConfigKey, setModifyConfigKey] = useState<string>("");
+  const {
+    isOpen: isModifyConfigOpen,
+    onOpen: onModifyConfigOpen,
+    onOpenChange: onModifyConfigOpenChange,
+  } = useDisclosure();
+  const handleModifyConfig = async (newValue: string) => {
+    if (process.env.NEXT_PUBLIC_TEST === "test") {
+      success("修改配置项成功!");
+      setMessageList([...messageList, "test: 修改配置项成功！"]);
+      return;
+    }
+    let tempConfigTable = configTable;
+    tempConfigTable[modifyConfigKey] = newValue;
+    API.putConfig({ project_name: projectName, content: tempConfigTable }).then(
+      (res) => {
+        if (res.status != 200) {
+          error("修改配置项失败!");
+        } else {
+          if (res.data.message)
+            setMessageList([...messageList, res.data.message]);
+          success("修改配置项成功！");
+          setConfigTable(tempConfigTable);
+        }
+      }
+    );
+  };
+
+  // 任务表
+  const [missionTable, setMissionTable] = useState<any>({});
+
+  return (
+    <>
+      {/* side bar */}
+      <div
+        className="fixed h-screen w-40 right-0 top-0 z-50 flex flex-col justify-between py-3 overflow-hidden transition-all bg-[#33333322] text-white"
+        style={{
+          width: closed ? "0" : "160px",
+          paddingLeft: closed ? "0" : "12px",
+          paddingRight: closed ? "0" : "12px",
+        }}
+      >
+        {/* top part */}
+        <div className="min-w-[136px] flex flex-col gap-2 text-sm">
+          <div
+            className="w-full flex gap-2 items-center cursor-pointer p-2 bg-[#33333322] hover:bg-[#33333377] transition-background rounded-lg"
+            onClick={handleCheckStrategy}
+          >
+            <FiLogOut />
+            <span>查看策略注册表</span>
+          </div>
+          <div
+            className="w-full flex gap-2 items-center cursor-pointer p-2 bg-[#33333322] hover:bg-[#33333377] transition-background rounded-lg"
+            onClick={onConfigOpen}
+          >
+            <FiLogOut />
+            <span>配置文件路径</span>
+          </div>
+        </div>
+        {/* bottom part */}
+        <div className="min-w-[136px] flex flex-col gap-2"></div>
+      </div>
+
+      {/* open or close button */}
+      <div
+        className=" bg-[#19191966] fixed top-2/3 w-10 h-10 right-[-20px] z-50 rounded-full transition-transform [clip-path:_polygon(0_0,_50%_0%,_50%_100%,_0%_100%);] flex items-center pl-[5px] text-white cursor-pointer"
+        style={{ transform: closed ? "translateX(0px)" : "translateX(-160px)" }}
+        onClick={(e) => setClosed(!closed)}
+      >
+        {closed ? <FaChevronLeft /> : <FaChevronRight />}
+      </div>
+
+      {/* main part */}
+      <div
+        className="w-screen h-screen p-10 flex justify-between transition-[clip-path]"
+        style={{
+          clipPath: closed
+            ? "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+            : `polygon(0% 0%, ${windowWidth - 170}px 0%, ${
+                windowWidth - 170
+              }px 100%, 0% 100%)`,
+        }}
+      >
+        {/* left part */}
+        <div className="w-[55%] h-full flex flex-col justify-between">
+          {/* config part */}
+          <div className="w-fit h-[35%] flex flex-col gap-2 p-4 rounded-xl bg-[#66666622]">
+            <p>配置块：</p>
+            <Table
+              aria-label="Example static collection table"
+              className=" max-h-full overflow-scroll no-scrollbar"
+              classNames={{
+                wrapper:
+                  " max-h-full overflow-scroll no-scrollbar bg-[#ffffff66]",
+              }}
+              isHeaderSticky={true}
+            >
+              <TableHeader>
+                <TableColumn className="bg-[#ffffff22]">Key</TableColumn>
+                <TableColumn className="bg-[#ffffff22]">Value</TableColumn>
+              </TableHeader>
+              <TableBody>
+                {Object.keys(configTable).map((configName, index) => {
+                  return (
+                    <TableRow key={index}>
+                      <TableCell>{configName}</TableCell>
+                      <TableCell className="relative w-full pr-6">
+                        <span>
+                          {typeof configTable[configName] === "object"
+                            ? JSON.stringify(configTable[configName])
+                            : String(configTable[configName])}
+                        </span>
+                        <BiSolidEdit
+                          className="!absolute h-full flex items-center top-0 right-2 cursor-pointer"
+                          onClick={() => {
+                            setModifyConfigKey(configName);
+                            onModifyConfigOpen();
+                          }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+          {/* mission part */}
+          <div className="w-full h-[60%] flex flex-col gap-2 p-4 rounded-xl bg-[#66666622]">
+            <p>任务块：</p>
+            <div className="w-full h-full flex flex-col gap-2 overflow-scroll no-scrollbar">
+              {}
+            </div>
+          </div>
+        </div>
+        {/* right part */}
+        <div className="w-[40%] h-full flex flex-col justify-between gap-2 p-4 rounded-xl bg-[#66666622]">
+          <p>消息列表：</p>
+          <div className="w-full h-full flex flex-col gap-1 overflow-scroll no-scrollbar bg-[#ffffff66] rounded-lg p-2">
+            {messageList.map((message, index) => (
+              <div key={index} className="text-xs">
+                {message}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* strategy modal */}
+      <StrategyModal
+        isOpen={isStrategyOpen}
+        onOpenChange={onStrategyOpenChange}
+        content={strategyTable}
+      />
+
+      {/* modify config item modal */}
+      <SingleInputModal
+        isOpen={isModifyConfigOpen}
+        onOpenChange={onModifyConfigOpenChange}
+        handleConfirm={handleModifyConfig}
+        title={`输入配置项${modifyConfigKey}新的值`}
+      />
+
+      {/* config modal */}
+      <ConfigModal
+        isOpen={isConfigOpen}
+        onOpenChange={onConfigOpenChange}
+        handleConfig={handleConfig}
+      />
+    </>
+  );
+}
