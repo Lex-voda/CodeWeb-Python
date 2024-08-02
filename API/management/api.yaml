@@ -36,10 +36,6 @@ paths:
                 $ref: '#/components/schemas/StrategyRegistryResponse'
         '501':
           description: ErrorResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /file/directory:
     get:
       tags:
@@ -59,10 +55,6 @@ paths:
                 $ref: '#/components/schemas/DirectoryResponse'
         '501':
           description: ErrorResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /file/project-list:
     get:
       tags:
@@ -77,10 +69,6 @@ paths:
                 $ref: '#/components/schemas/ProjectListResponse'
         '501':
           description: ErrorResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /file/config:
     get:
       tags:
@@ -100,10 +88,6 @@ paths:
                 $ref: '#/components/schemas/ConfigurationResponse'
         '501':
           description: ErrorResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
     put:
       tags:
         - 配置
@@ -117,16 +101,8 @@ paths:
       responses:
         '200':
           description: SuccessResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
         '500':
           description: ErrorResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /file:
     parameters:
       - name: file_path
@@ -148,16 +124,8 @@ paths:
       responses:
         '200':
           description: SuccessResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
         '500':
           description: ErrorResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
     put:
       tags:
         - 文件操作
@@ -171,22 +139,10 @@ paths:
       responses:
         '200':
           description: SuccessResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
         '501':
           description: ErrorResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: ErrorResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
     get:
       tags:
         - 文件操作
@@ -200,16 +156,8 @@ paths:
                 $ref: '#/components/schemas/FileContentResponse'
         '404':
           description: NotFoundResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: ErrorResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
     patch:
       tags:
         - 文件操作
@@ -224,16 +172,8 @@ paths:
       responses:
         '200':
           description: SuccessResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
         '500':
           description: ErrorResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
     delete:
       tags:
         - 文件操作
@@ -241,16 +181,8 @@ paths:
       responses:
         '200':
           description: SuccessResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
         '500':
           description: ErrorResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /mission:
     get:
       tags:
@@ -265,10 +197,6 @@ paths:
                 $ref: '#/components/schemas/MissionStatusResponse'
         '500':
           description: ErrorResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
     post:
       tags:
         - 任务管理
@@ -288,10 +216,6 @@ paths:
                 $ref: '#/components/schemas/MissionResponse'
         '500':
           description: ErrorResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
     delete:
       tags:
         - 任务管理
@@ -305,16 +229,8 @@ paths:
       responses:
         '200':
           description: SuccessResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
         '500':
           description: ErrorResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /monitor:
     get:
       tags:
@@ -329,10 +245,6 @@ paths:
                 $ref: '#/components/schemas/SystemStatusResponse'
         '500':
           description: ErrorResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     StrategyRegistryResponse:
@@ -349,22 +261,22 @@ components:
                 $ref: '#/components/schemas/StrategyInfo'
     StrategyInfo:
       type: object
-      additionalProperties:
-        type: object
-        properties:
-          argus:
+      properties:
+        argus:
+          type: array
+          items:
             type: object
             properties:
               argu_name:
                 type: string
-              argus_annotation:
+              argu_annotation:
                 type: string
-              argus_default:
+              argu_default:
                 type: string
-          return_annotation:
-            type: string
-          comment:
-            type: string
+        return_annotation:
+          type: string
+        comment:
+          type: string
     ConfigurationResponse:
       type: object
       properties:
@@ -517,14 +429,3 @@ components:
               properties:
                 load:
                   type: string
-    ErrorResponse:
-      type: object
-      properties:
-        message:
-          type: string
-    
-    SuccessResponse:
-      type: object
-      properties:
-        message:
-          type: string

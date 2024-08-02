@@ -537,14 +537,16 @@ components:
       type: object
       properties:
         argus:
-          type: object
-          properties:
-            argu_name:
-              type: string
-            argu_annotation:
-              type: string
-            argu_default:
-              type: string
+          type: array
+          items:
+            type: object
+            properties:
+              argu_name:
+                type: string
+              argu_annotation:
+                type: string
+              argu_default:
+                type: string
         return_annotation:
           type: string
         comment:
