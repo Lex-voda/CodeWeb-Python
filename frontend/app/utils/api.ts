@@ -64,12 +64,28 @@ const getConfig = async (project_name: string) =>
     }
   );
 
+interface putConfigReq {
+  project_name: string;
+  content: any;
+}
+
+interface putConfigRes {
+  message: string;
+}
+
+const putConfig = async (data: Partial<putConfigReq>) =>
+  await instance.put<putConfigReq, AxiosResponse<Partial<putConfigRes>>>(
+    `/file/config`,
+    data
+  );
+
 const API = {
   getProjectList,
   getDirectory,
   getStrategy,
   postConfig,
   getConfig,
+  putConfig,
 };
 
 export default API;

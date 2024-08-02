@@ -1,29 +1,60 @@
 export const testStrategy = {
-    additionalProp1: {
-        argus: {
-            argu_name: "string",
-            argu_annotation: "string",
-            argu_default: "string"
-        },
-        return_annotation: "string",
-        comment: "string"
+    strategy1: {
+        argus: [
+            {
+                argu_name: "a",
+                argu_annotation: "string",
+                argu_default: "abc"
+            },
+            {
+                argu_name: "a",
+                argu_annotation: "string",
+                argu_default: "abc"
+            },
+            {
+                argu_name: "b",
+                argu_annotation: "number",
+                argu_default: "1"
+            }
+        ],
+        return_annotation: "number",
+        comment: "nothing"
     },
-    additionalProp2: {
-        argus: {
-            argu_name: "string",
-            argu_annotation: "string",
-            argu_default: "string"
-        },
-        return_annotation: "string",
-        comment: "string"
+    strategy2: {
+        argus: [
+            {
+                argu_name: "a",
+                argu_annotation: "string",
+                argu_default: "abc"
+            },
+            {
+                argu_name: "b",
+                argu_annotation: "number",
+                argu_default: "1"
+            }
+        ],
+        return_annotation: "number",
+        comment: "nothing"
     },
-    additionalProp3: {
-        argus: {
-            argu_name: "string",
-            argu_annotation: "string",
-            argu_default: "string"
-        },
-        return_annotation: "string",
-        comment: "string"
-    }
+    strategy3: {
+        argus: [
+            {
+                argu_name: "a",
+                argu_annotation: "string",
+                argu_default: "abc"
+            },
+            {
+                argu_name: "b",
+                argu_annotation: "number",
+                argu_default: "1"
+            },
+            {
+                argu_name: "b",
+                argu_annotation: "number",
+                argu_default: "1"
+            }
+        ],
+        return_annotation: "number",
+        comment: "nothing"
+    },
 }

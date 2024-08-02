@@ -1,5 +1,13 @@
 "use client";
 import { Modal, ModalContent, ModalBody, Button } from "@nextui-org/react";
+import {
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@nextui-org/react";
 
 export default function StrategyModal({
   isOpen,
@@ -36,54 +44,55 @@ export default function StrategyModal({
             <ModalBody className="w-full h-full relative left-0 top-0">
               <div className="w-full h-full absolute top-0 left-0 z-[1] p-6 overflow-scroll no-scrollbar flex flex-col gap-3 ">
                 {Object.keys(content).map((strategyName, index) => (
-                  <div key={strategyName} className=" ">
-                    <p>
-                      {strategyName}: {`{`}
-                    </p>
-                    <div className="pl-6">
-                      <p>argus: {`{`}</p>
-                      <div className="pl-6">
-                        <p>
-                          argu_name:{" "}
+                  <Table aria-label="strategy table" key={index}>
+                    <TableHeader>
+                      <TableColumn>Strategy Name</TableColumn>
+                      <TableColumn>Argus</TableColumn>
+                      <TableColumn>Return Annotation</TableColumn>
+                      <TableColumn>Comment</TableColumn>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow key="1">
+                        <TableCell>{strategyName}</TableCell>
+                        <TableCell>
+                          <Table aria-label="Example static collection table">
+                            <TableHeader>
+                              <TableColumn>Argu Name</TableColumn>
+                              <TableColumn>Argu Annotation</TableColumn>
+                              <TableColumn>Argu Default</TableColumn>
+                            </TableHeader>
+                            <TableBody>
+                              {content[Object.keys(content)[index]][
+                                "argus"
+                              ].map((argu: any) => {
+                                return (
+                                  <TableRow key={argu["argu_name"]}>
+                                    <TableCell>{argu["argu_name"]}</TableCell>
+                                    <TableCell>
+                                      {argu["argu_annotation"]}
+                                    </TableCell>
+                                    <TableCell>
+                                      {argu["argu_default"]}
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
+                        </TableCell>
+                        <TableCell>
                           {
-                            content[Object.keys(content)[index]]["argus"][
-                              "argu_name"
+                            content[Object.keys(content)[index]][
+                              "return_annotation"
                             ]
                           }
-                        </p>
-                        <p>
-                          argus_annotation:{" "}
-                          {
-                            content[Object.keys(content)[index]]["argus"][
-                              "argu_annotation"
-                            ]
-                          }
-                        </p>
-                        <p>
-                          argus_default:{" "}
-                          {
-                            content[Object.keys(content)[index]]["argus"][
-                              "argu_default"
-                            ]
-                          }
-                        </p>
-                      </div>
-                      <p>{`}`}</p>
-                      <p>
-                        return_annotation:{" "}
-                        {
-                          content[Object.keys(content)[index]][
-                            "return_annotation"
-                          ]
-                        }
-                      </p>
-                      <p>
-                        comment:{" "}
-                        {content[Object.keys(content)[index]]["comment"]}
-                      </p>
-                    </div>
-                    <p>{`}`}</p>
-                  </div>
+                        </TableCell>
+                        <TableCell>
+                          {content[Object.keys(content)[index]]["comment"]}
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
                 ))}
               </div>
             </ModalBody>
