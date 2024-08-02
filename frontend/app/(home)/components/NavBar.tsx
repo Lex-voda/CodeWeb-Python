@@ -29,7 +29,7 @@ export default function NavBar({
             className="w-full flex gap-2 text-lg items-center cursor-pointer"
             onClick={() => router.push("/")}
           >
-            <span className="font-bold animate-brand">CV-WEB</span>
+            <span className="font-bold animate-brand">Code-WEB</span>
           </div>
         </div>
         {/* bottom part */}
