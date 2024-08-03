@@ -23,7 +23,12 @@ export default function SelectStrategyModal({
 }) {
   const [value, setValue] = useState<string>("");
   return (
-    <Modal isOpen={isOpen} onOpenChange={onOpenChange} placement="center">
+    <Modal
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+      placement="center"
+      onClose={() => setValue("")}
+    >
       <ModalContent>
         {(onClose) => (
           <>
@@ -48,6 +53,7 @@ export default function SelectStrategyModal({
               <Button
                 color="primary"
                 onPress={() => {
+                  if (value === "") return;
                   handleConfirm(value);
                   onClose();
                 }}

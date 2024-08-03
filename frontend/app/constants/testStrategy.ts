@@ -7,12 +7,12 @@ export const testStrategy = {
                 argu_default: "abc"
             },
             {
-                argu_name: "a",
+                argu_name: "b",
                 argu_annotation: "string",
                 argu_default: "abc"
             },
             {
-                argu_name: "b",
+                argu_name: "c",
                 argu_annotation: "number",
                 argu_default: "1"
             }
@@ -39,17 +39,17 @@ export const testStrategy = {
     strategy3: {
         argus: [
             {
-                argu_name: "a",
+                argu_name: "r",
                 argu_annotation: "string",
                 argu_default: "abc"
             },
             {
-                argu_name: "b",
+                argu_name: "m",
                 argu_annotation: "number",
                 argu_default: "1"
             },
             {
-                argu_name: "b",
+                argu_name: "t",
                 argu_annotation: "number",
                 argu_default: "1"
             }
