@@ -188,6 +188,11 @@ paths:
       tags:
         - 任务管理
       summary: 通过 WebSocket 连接获取任务状态
+      parameters:
+      - name: project_name
+        required: true
+        schema:
+            type: string
       responses:
         '200':
           description: 成功获取任务状态
