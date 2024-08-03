@@ -75,12 +75,7 @@ export default function SelectParameterModal({
       placement="center"
       onClose={() => {
         setSelectedKeys([]);
-        setArgs(
-          Array(
-            strategyContents[strategyNames.indexOf(currentOpenStrategyName)]
-              .argus.length
-          ).fill("")
-        );
+        setArgs([]);
       }}
       className="max-h-[80vh] overflow-scroll no-scrollbar"
     >

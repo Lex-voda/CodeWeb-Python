@@ -2,7 +2,7 @@
 import { testStrategy } from "@/app/constants/testStrategy";
 import { Mission, StrategyContent } from "@/app/interfaces/project";
 import API from "@/app/utils/api";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { FiLogOut } from "react-icons/fi";
 import StrategyModal from "./strategyModal";
@@ -22,16 +22,14 @@ import { BiSolidEdit } from "react-icons/bi";
 import SingleInputModal from "./singleInputModal";
 import useWindow from "@/app/hooks/useWindow";
 import MissionBlock from "./missionBlock";
-import { randomColor } from "@/app/utils/randomColor";
 import { IoAddSharp } from "react-icons/io5";
 import AddMissionModal from "./addMissionModal";
+import { ColorMapContext } from "../context/ColorMapContext";
 
 export default function MainPage({ projectName }: { projectName: string }) {
   const [closed, setClosed] = useState(false);
   const { width: windowWidth } = useWindow();
-  const [missionColors, setMissionColors] = useState<Array<string>>(
-    randomColor(100, 0.4)
-  );
+  const { colorMap, updateColorMap, randomColors } = useContext(ColorMapContext);
 
   // message list
   const [messageList, setMessageList] = useState<Array<string>>([]);
@@ -43,6 +41,14 @@ export default function MainPage({ projectName }: { projectName: string }) {
   const [strategyNames, setStrategyNames] = useState<string[]>([]);
 
   const [configTable, setConfigTable] = useState<any>({});
+
+  // 配置项颜色
+  useEffect(() => {
+    let originSize = colorMap.size;
+    for (let i = 0; i < Object.keys(configTable).length; i++) {
+      updateColorMap(Object.keys(configTable)[i], randomColors[originSize + i]);
+    }
+  }, [configTable]);
 
   // 获取配置表
   const getConfigTable = async () => {
@@ -173,6 +179,7 @@ export default function MainPage({ projectName }: { projectName: string }) {
     onOpen: onAddMissionOpen,
     onOpenChange: onAddMissionOpenChange,
   } = useDisclosure();
+  
   const handleAddMission = (missionName: string, iterable: boolean) => {
     setMissionTable((prev) => {
       return [
@@ -279,7 +286,16 @@ export default function MainPage({ projectName }: { projectName: string }) {
                 {Object.keys(configTable).map((configName, index) => {
                   return (
                     <TableRow key={index}>
-                      <TableCell>{configName}</TableCell>
+                      <TableCell className="p-0">
+                        <div
+                          className="p-1 rounded-lg flex items-center justify-center"
+                          style={{
+                            backgroundColor: colorMap.get(configName),
+                          }}
+                        >
+                          {configName}
+                        </div>
+                      </TableCell>
                       <TableCell className="relative w-full pr-6">
                         <span>
                           {typeof configTable[configName] === "object"
@@ -310,7 +326,6 @@ export default function MainPage({ projectName }: { projectName: string }) {
                   mission={mission}
                   missionTable={missionTable}
                   currentMission={currentMission}
-                  missionColor={missionColors[index]}
                   strategyNames={strategyNames}
                   strategyContents={strategyContents}
                   setMissionTable={setMissionTable}

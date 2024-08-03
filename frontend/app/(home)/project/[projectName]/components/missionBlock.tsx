@@ -1,5 +1,12 @@
 "use client";
-import { Dispatch, SetStateAction, useRef, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Mission, StrategyContent } from "../../../../interfaces/project";
 import { VscDebugStart } from "react-icons/vsc";
 import { FaRegCircleStop } from "react-icons/fa6";
@@ -12,13 +19,13 @@ import { error } from "@/app/utils/message";
 import SingleInputModal from "./singleInputModal";
 import { BiSolidEdit } from "react-icons/bi";
 import SelectParameterModal from "./selectParameterModal";
+import { ColorMapContext } from "../context/ColorMapContext";
 
 export default function MissionBlock({
   missionIndex,
   mission,
   missionTable,
   currentMission,
-  missionColor,
   strategyNames,
   strategyContents,
   setMissionTable,
@@ -30,7 +37,6 @@ export default function MissionBlock({
   mission: Mission;
   missionTable: Mission[];
   currentMission: string;
-  missionColor: string;
   strategyNames: string[];
   strategyContents: Array<StrategyContent>;
   setMissionTable: Dispatch<SetStateAction<Mission[]>>;
@@ -38,6 +44,9 @@ export default function MissionBlock({
   handleStopMission: (index: number) => void;
   configTable: any;
 }) {
+  const { colorMap, updateColorMap, randomColors } =
+    useContext(ColorMapContext);
+
   const [closed, setClosed] = useState(false);
   const {
     isOpen: isSelectStrategyOpen,
@@ -124,13 +133,36 @@ export default function MissionBlock({
     setMissionTable(newMissionTable);
   };
 
+  useEffect(() => {
+    let originSize = colorMap.size;
+    for (let i = 0; i < mission.STRATEGY_QUEUE.length; i++) {
+      let strategy = mission.STRATEGY_QUEUE[i];
+      if (colorMap.has(strategy.ID)) continue;
+      updateColorMap(strategy.ID, randomColors[originSize + i]);
+      console.log(colorMap);
+    }
+  }, [mission.STRATEGY_QUEUE, colorMap]);
+
+  const convertStrategyARGSValue = (value: any) => {
+    if (value === null) return "null";
+    if (typeof value === "string") {
+      if (value.endsWith("_OUTPUT")) return value.slice(0, -7);
+    }
+    for (let i = 0; i < Object.keys(configTable).length; i++) {
+      if (configTable[Object.keys(configTable)[i]] === value) {
+        return Object.keys(configTable)[i];
+      }
+    }
+    return "null";
+  };
+
   return (
     <div
       className="relative w-full p-2 rounded-lg shadow-sm transition-height overflow-hidden"
       ref={missionRef}
       style={{
         height: closed ? "36px" : `${missionRef.current?.scrollHeight}px`,
-        backgroundColor: missionColor,
+        backgroundColor: "#ffffff33",
       }}
       key={missionIndex}
     >
@@ -171,41 +203,51 @@ export default function MissionBlock({
         </div>
       </div>
       <div className="flex flex-col gap-4 mt-2 h-fit">
-        {mission.STRATEGY_QUEUE.map((strategy, index) => (
-          <div className={`relative w-full h-fit `} key={index}>
-            <div
-              className={`w-[70%] h-fit p-2 overflow-scroll no-scrollbar flex gap-2 items-center rounded-lg shadow-[0px_0px_2px_0.5px_rgba(0,0,0,0.2)] cursor-pointer ${
-                "bg-[" + missionColor + "]"
-              }`}
-              onClick={() => {
-                setCurrentOpenStrategyName(strategy.FUNC);
-                setCurrentOpenStrategyID(strategy.ID);
-                onSelectParameterOpen();
-              }}
-            >
-              <div className="flex items-center justify-center p-[6px] shadow-[0px_0px_2px_0.5px_rgba(0,0,0,0.2)] rounded-lg">
-                {strategy.FUNC}
-              </div>
-              {Object.keys(strategy.ARGS).map((arg) => (
+        {mission.STRATEGY_QUEUE.map((strategy, index) => {
+          return (
+            <div className={`relative w-full h-fit `} key={index}>
+              <div
+                className={`w-[70%] h-fit p-2 overflow-scroll no-scrollbar flex gap-2 items-center rounded-lg shadow-[0px_0px_2px_0.5px_rgba(0,0,0,0.2)] cursor-pointer `}
+                onClick={() => {
+                  setCurrentOpenStrategyName(strategy.FUNC);
+                  setCurrentOpenStrategyID(strategy.ID);
+                  onSelectParameterOpen();
+                }}
+              >
                 <div
                   className="flex items-center justify-center p-[6px] shadow-[0px_0px_2px_0.5px_rgba(0,0,0,0.2)] rounded-lg"
-                  key={arg}
+                  style={{
+                    backgroundColor: colorMap.get(strategy.ID),
+                  }}
                 >
-                  {arg}:
-                  {typeof strategy.ARGS[arg] === "object"
-                    ? JSON.stringify(strategy.ARGS[arg])
-                    : String(strategy.ARGS[arg])}
+                  {strategy.FUNC}
                 </div>
-              ))}
+                {Object.keys(strategy.ARGS).map((arg) => (
+                  <div
+                    className="flex items-center justify-center p-[6px] shadow-[0px_0px_2px_0.5px_rgba(0,0,0,0.2)] rounded-lg"
+                    key={arg}
+                    style={{
+                      backgroundColor: colorMap.get(
+                        convertStrategyARGSValue(strategy.ARGS[arg])
+                      ),
+                    }}
+                  >
+                    {arg}:
+                    {typeof strategy.ARGS[arg] === "object"
+                      ? JSON.stringify(strategy.ARGS[arg])
+                      : String(strategy.ARGS[arg])}
+                  </div>
+                ))}
+              </div>
+              {/* select get output */}
+              <div className="absolute right-0 top-0 h-full w-[25%] px-2 flex justify-center items-center rounded-lg bg-[#ffffff33]">
+                <CheckBox
+                  handleClick={handleClickGetOutput(strategy.ID)}
+                ></CheckBox>
+              </div>
             </div>
-            {/* select get output */}
-            <div className="absolute right-0 top-0 h-full w-[25%] px-2 flex justify-center items-center rounded-lg bg-[#ffffff33]">
-              <CheckBox
-                handleClick={handleClickGetOutput(strategy.ID)}
-              ></CheckBox>
-            </div>
-          </div>
-        ))}
+          );
+        })}
         {/* add strategy */}
         <div
           className="w-12 h-12 flex justify-center items-center border-dashed border-2 border-[#ffffff66] cursor-pointer"
