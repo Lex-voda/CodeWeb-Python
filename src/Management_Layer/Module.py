@@ -156,7 +156,7 @@ class StrategyModule:
         
 
 class ResourceModule:
-    def __init__(self, ignore_prefixes=None, ignore_suffixes=None):
+    def __init__(self,sys_name, ignore_prefixes=None, ignore_suffixes=None):
         
         self.project_root = None    # 项目根目录的绝对路径
         self.root_project = None    # 项目根目录的文件夹名
@@ -165,7 +165,7 @@ class ResourceModule:
         
         self.ignore_prefixes = ignore_prefixes if ignore_prefixes else [] # 忽略的文件夹前缀
         self.ignore_suffixes = ignore_suffixes if ignore_suffixes else [] # 忽略的文件后缀
-        self.sys_name = "CV_WEB"
+        self.sys_name = sys_name
         self.sync()
         
         # 系统资源监控

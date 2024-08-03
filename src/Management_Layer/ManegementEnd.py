@@ -15,14 +15,14 @@ class ManegementEnd:
             os.path.dirname(
                 os.path.dirname(
                     os.path.dirname(os.path.abspath(__file__)))))
-        from CV_WEB.api import StrategyModule, ResourceModule, ConfigModule, DBManager
+        from CodeWeb_python.api import StrategyModule, ResourceModule, ConfigModule, DBManager
         
         self.threads = {}   # 线程表
         self.output_dict = {}   # 输出表
         self.project_root = None   # 项目根目录绝对路径
         self.projects = []  # 项目集
         
-        self.res_manager = ResourceModule() # 资源管理器
+        self.res_manager = ResourceModule(sys_name="CodeWeb_python") # 资源管理器
         self.strategy_manager = StrategyModule(self.res_manager)    # 策略管理器
         self.config_manager = ConfigModule(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'sys_config.json'))     # 配置管理器
         self.db_manager = DBManager(self.config_manager.get_db_params())    # 数据库管理器
@@ -104,6 +104,12 @@ class ManegementEnd:
             print(f"线程 {name} 已删除")
         else:
             print(f"线程 {name} 不存在")
+    
+    def get_task_status(self, name=None):
+        """
+        获取任务状态
+        """
+        return name in self.threads
     
     def sync_user_config(self, project_name):
         """
