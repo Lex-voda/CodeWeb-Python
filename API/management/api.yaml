@@ -115,12 +115,6 @@ paths:
       tags:
         - 文件操作
       summary: 创建文件或文件夹
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FileCreationRequest'
       responses:
         '200':
           description: SuccessResponse
@@ -329,11 +323,6 @@ components:
         content:
           type: object
           additionalProperties: true
-    FileCreationRequest:
-      type: object
-      properties:
-        path:
-          type: string
     FileModificationRequest:
       type: object
       properties:
