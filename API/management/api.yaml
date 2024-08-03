@@ -353,10 +353,8 @@ components:
       properties:
         message:
           type: string
-        data:
-          type: object
-          additionalProperties:
-            type: object
+        status:
+          type: string
     MissionRequest:
       type: object
       additionalProperties:
