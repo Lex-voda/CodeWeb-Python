@@ -232,10 +232,11 @@ export default function MissionBlock({
                       ),
                     }}
                   >
-                    {arg}:
+                    {/* {arg}:
                     {typeof strategy.ARGS[arg] === "object"
                       ? JSON.stringify(strategy.ARGS[arg])
-                      : String(strategy.ARGS[arg])}
+                      : String(strategy.ARGS[arg])} */}
+                    {arg}
                   </div>
                 ))}
               </div>
