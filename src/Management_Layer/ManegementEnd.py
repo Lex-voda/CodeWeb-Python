@@ -2,7 +2,7 @@ import os
 import sys
 import concurrent.futures
 import ctypes
-from utils import ThreadOutputStream 
+from Management_Layer.utils import ThreadOutputStream 
 
 class ManegementEnd:
     def __init__(self):
@@ -105,11 +105,11 @@ class ManegementEnd:
         else:
             print(f"线程 {name} 不存在")
     
-    def get_task_status(self, name=None):
+    def get_task_status(self, project_name=None):
         """
         获取任务状态
         """
-        return name in self.threads
+        return project_name in self.threads
     
     def sync_user_config(self, project_name):
         """
