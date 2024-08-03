@@ -1,12 +1,12 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-from Management_Layer import ManegementEnd
+from CodeWeb_python.Management_Layer import ManagementEnd
 
 app = Flask(__name__)
 cors = CORS(app, origins="*")
 
-management_instance = ManegementEnd.ManegementEnd()
+manager = ManagementEnd.ManagementEnd()
 
 # 请求同步策略注册表
 @app.route('/file/strategy', methods=['GET'])
@@ -15,7 +15,7 @@ def get_strategy_registry():
     if not project_name:
         return jsonify({"error": "Project name is required"}), 400
     try:
-        strategy_registry = management_instance.get_strategy_registry(project_name)
+        strategy_registry = manager.get_strategy_registry(project_name)
         return jsonify({"message": "同步成功", "data": {"strategy_registry": strategy_registry}}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 501
@@ -27,7 +27,7 @@ def get_directory_tree():
     if not project_name:
         return jsonify({"error": "Project name is required"}), 400
     try:
-        directory_tree = management_instance.get_directory_tree()
+        directory_tree = manager.get_directory_tree()
         return jsonify({"message": "同步成功", "data": {"file_directory": directory_tree}}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 501
@@ -36,19 +36,19 @@ def get_directory_tree():
 @app.route('/file/project-list', methods=['GET'])
 def get_project_list():
     try:
-        project_list = management_instance.get_project_list()
+        project_list = manager.get_project_list()
         return jsonify({"message": "同步成功", "data": {"project_list": project_list}}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 501
 
-# 请求同步配置文件 !!! 返回值和api没对上
+# 请求同步配置文件
 @app.route('/file/config', methods=['GET'])
 def get_configuration():
     project_name = request.args.get('project_name')
     if not project_name:
         return jsonify({"error": "Project name is required"}), 400
     try:
-        config = management_instance.sync_user_config(project_name)
+        config = manager.sync_user_config(project_name)
         return jsonify({"message": "Sync succeed", "data": {"configuration": config}}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 501
@@ -62,7 +62,7 @@ def update_configuration():
     if not project_name or not content:
         return jsonify({"error": "Project name and content are required"}), 400
     try:
-        management_instance.update_user_config(project_name, content)
+        manager.update_user_config(project_name, content)
         return jsonify({"message": "Success"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -74,7 +74,7 @@ def create_file():
     if not file_path:
         return jsonify({"error": "File path is required"}), 400
     try:
-        management_instance.update_folder_or_file([None, file_path, None])
+        manager.update_folder_or_file([None, file_path, None])
         return jsonify({"message": "Success"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -88,7 +88,7 @@ def modify_file():
     if not file_path or not content:
         return jsonify({"error": "File path and content are required"}), 400
     try:
-        management_instance.update_folder_or_file([file_path, file_path, content])
+        manager.update_folder_or_file([file_path, file_path, content])
         return jsonify({"message": "Success"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -96,7 +96,14 @@ def modify_file():
 # 查看文件内容
 @app.route('/file', methods=['GET'])
 def view_file_content():
-    pass
+    file_path = request.args.get('file_path')
+    if not file_path:
+        return jsonify({"error": "File path is required"}), 400
+    try:
+        content = manager.read_file(file_path)
+        return jsonify({"message": "Success", "data": {"content": content}}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # 重命名用户文件
 @app.route('/file', methods=['PATCH'])
@@ -108,7 +115,7 @@ def rename_file():
     import os
     parent_dir = os.path.dirname(file_path)
     try:
-        management_instance.update_folder_or_file([file_path, os.path.join(parent_dir, new_name), None])
+        manager.update_folder_or_file([file_path, os.path.join(parent_dir, new_name), None])
         return jsonify({"message": "Success"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -120,7 +127,7 @@ def delete_file():
     if not file_path:
         return jsonify({"error": "File path is required"}), 400
     try:
-        management_instance.update_folder_or_file([file_path, None, None])
+        manager.update_folder_or_file([file_path, None, None])
         return jsonify({"message": "Success"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -132,7 +139,7 @@ def get_mission_status():
     if not project_name:
         return jsonify({"error": "Project name is required"}), 400
     try:
-        mission_status = management_instance.get_task_status(project_name)
+        mission_status = manager.get_task_status(project_name)
         return jsonify({"message": "Get mission status successfully", "status": mission_status}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -144,8 +151,8 @@ def send_mission():
     if not data:
         return jsonify({"error": "Request body shouldn't be empty"}), 400
     try:
-        response = management_instance.execute(data)
-        return jsonify({"message": "Send mission information successfully", "data": response}), 200
+        message, response = manager.execute(data)
+        return jsonify({"message": message, "data": response}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -156,7 +163,7 @@ def delete_mission():
     if not mission_name:
         return jsonify({"error": "Mission name is required"}), 400
     try:
-        management_instance.remove_thread(mission_name)
+        manager.remove_thread(mission_name)
         return jsonify({"message": "Delete mission successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -165,7 +172,7 @@ def delete_mission():
 @app.route('/monitor', methods=['GET'])
 def get_system_status():
     try:
-        system_status = management_instance.get_system_monitor_info()
+        system_status = manager.get_system_monitor_info()
         return jsonify({"message": "Get system status successfully", "data": system_status}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

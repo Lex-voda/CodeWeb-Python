@@ -2,9 +2,9 @@ import os
 import sys
 import concurrent.futures
 import ctypes
-from Management_Layer.utils import ThreadOutputStream 
+from utils import ThreadOutputStream 
 
-class ManegementEnd:
+class ManagementEnd:
     def __init__(self):
         print("---管理层启动---")
         
@@ -58,12 +58,14 @@ class ManegementEnd:
         """
         获取项目列表
         """
+        self.res_manager.sync()
         return self.projects
     
     def get_strategy_registry(self, project_name):
         """
         根据项目名获取策略注册表信息
         """
+        self.strategy_manager.sync()
         return self.strategy_manager.get_registry_info(project_name)
     
     def get_directory_tree(self):
@@ -95,15 +97,15 @@ class ManegementEnd:
         print("==所有执行完成==")
         return output_message_dict, output_data_dict
     
-    def remove_thread(self, name):
+    def remove_thread(self, project_name):
         """
         根据名字删除线程
         """
-        if name in self.threads:
-            del self.threads[name]
-            print(f"线程 {name} 已删除")
+        if project_name in self.threads:
+            del self.threads[project_name]
+            print(f"线程 {project_name} 已删除")
         else:
-            print(f"线程 {name} 不存在")
+            print(f"线程 {project_name} 不存在")
     
     def get_task_status(self, project_name=None):
         """
@@ -118,6 +120,7 @@ class ManegementEnd:
         user_config_path = self.db_manager.get_project_config_path(project_name)
         user_config_path = os.path.join(self.project_root, project_name, user_config_path)
         self.config_manager.sync(project_name, user_config_path)
+        return self.config_manager.user_config[project_name]
     
     def update_user_config_path(self, project_name, config_path):
         """
@@ -139,6 +142,12 @@ class ManegementEnd:
         past_new_path_content (tuple): (past_path, new_path, content)
         """
         self.res_manager.update_folder_or_file(past_new_path_content)
+    
+    def read_file(self, file_path):
+        """
+        读取文件
+        """
+        return self.res_manager.read_file(file_path)
     
     def get_system_monitor_info(self):
         """

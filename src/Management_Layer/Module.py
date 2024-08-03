@@ -208,16 +208,8 @@ class ResourceModule:
     
     def update_folder_or_file(self, past_new_path_content):
         past, new, content = past_new_path_content
-
-        def get_absolute_path(relative_path):
-            if relative_path:
-                if relative_path.startswith(self.root_project):
-                        relative_path = relative_path[len(self.root_project):].lstrip(os.sep)
-                return os.path.normpath(os.path.join(self.project_root, relative_path))
-            return None
-
-        past_abs = get_absolute_path(past)
-        new_abs = get_absolute_path(new)
+        past_abs = self._get_absolute_path(past)
+        new_abs = self._get_absolute_path(new)
 
         if past and new:
             # 重命名文件或文件夹
@@ -248,6 +240,7 @@ class ResourceModule:
             print("Error: Both past and new cannot be empty.")
     
     def get_file_content(self, file_path):
+        file_path = self._get_absolute_path(file_path)
         with open(file_path, 'r') as f:
             return f.read()
     
@@ -342,6 +335,13 @@ class ResourceModule:
                 "load": hdd_load
             }
         }
+    
+    def _get_absolute_path(self, relative_path):
+        if relative_path:
+            if relative_path.startswith(self.root_project):
+                    relative_path = relative_path[len(self.root_project):].lstrip(os.sep)
+            return os.path.normpath(os.path.join(self.project_root, relative_path))
+        return None
 
         
 class ConfigModule:
