@@ -70,15 +70,17 @@ paths:
         '501':
           description: ErrorResponse
   /file/config:
+    parameters:
+      - name: project_name
+        in: query
+        required: true
+        schema:
+          type: string
+          description: 项目名
     get:
       tags:
         - 配置
       summary: 请求同步配置文件
-      parameters:
-      - name: project_name
-        required: true
-        schema:
-            type: string
       responses:
         '200':
           description: 同步成功
@@ -318,17 +320,12 @@ components:
     ConfigurationRequest:
       type: object
       properties:
-        project_name:
-          type: string
         content:
           type: object
           additionalProperties: true
     FileModificationRequest:
       type: object
       properties:
-        file_path:
-          type: string
-          description: 文件路径
         content:
           type: string
           description: 文件内容
