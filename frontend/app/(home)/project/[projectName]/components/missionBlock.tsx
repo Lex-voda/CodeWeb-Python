@@ -11,6 +11,7 @@ import CheckBox from "./checkBox";
 import { error } from "@/app/utils/message";
 import SingleInputModal from "./singleInputModal";
 import { BiSolidEdit } from "react-icons/bi";
+import SelectParameterModal from "./selectParameterModal";
 
 export default function MissionBlock({
   missionIndex,
@@ -23,6 +24,7 @@ export default function MissionBlock({
   setMissionTable,
   handleStartMission,
   handleStopMission,
+  configTable,
 }: {
   missionIndex: number;
   mission: Mission;
@@ -34,6 +36,7 @@ export default function MissionBlock({
   setMissionTable: Dispatch<SetStateAction<Mission[]>>;
   handleStartMission: (index: number) => void;
   handleStopMission: (index: number) => void;
+  configTable: any;
 }) {
   const [closed, setClosed] = useState(false);
   const {
@@ -67,7 +70,7 @@ export default function MissionBlock({
       {
         FUNC: strategyName,
         ARGS: newARGS,
-        ID: "RMT" + strategyCount.current++,
+        ID: "RMT_" + strategyCount.current++,
       },
     ];
     setMissionTable(newMissionTable);
@@ -86,9 +89,44 @@ export default function MissionBlock({
       setMissionTable(newMissionTable);
     };
   }
+
+  const {
+    isOpen: isSelectParameterOpen,
+    onOpen: onSelectParameterOpen,
+    onOpenChange: onSelectParameterOpenChange,
+  } = useDisclosure();
+  const [currentOpenStrategyName, setCurrentOpenStrategyName] =
+    useState<string>("");
+  const [currentOpenStrategyID, setCurrentOpenStrategyID] =
+    useState<string>("");
+
+  const handleSelectParameter = (args: Array<any>) => {
+    let strategyContent =
+      strategyContents[strategyNames.indexOf(currentOpenStrategyName)];
+    let newMissionTable = [...missionTable];
+    let newARGS: any = {};
+    for (let i = 0; i < strategyContent.argus.length; i++) {
+      newARGS[strategyContent.argus[i].argu_name] = args[i];
+    }
+    for (
+      let i = 0;
+      i < newMissionTable[missionIndex].STRATEGY_QUEUE.length;
+      i++
+    ) {
+      if (
+        newMissionTable[missionIndex].STRATEGY_QUEUE[i].ID ===
+        currentOpenStrategyID
+      ) {
+        newMissionTable[missionIndex].STRATEGY_QUEUE[i].ARGS = newARGS;
+        break;
+      }
+    }
+    setMissionTable(newMissionTable);
+  };
+
   return (
     <div
-      className="relative w-full p-2 rounded-lg shadow-sm transition-height overflow-scroll no-scrollbar max-h-[400px]"
+      className="relative w-full p-2 rounded-lg shadow-sm transition-height overflow-hidden"
       ref={missionRef}
       style={{
         height: closed ? "36px" : `${missionRef.current?.scrollHeight}px`,
@@ -132,23 +170,25 @@ export default function MissionBlock({
           />
         </div>
       </div>
-      <div className="flex flex-col gap-4 mt-2">
+      <div className="flex flex-col gap-4 mt-2 h-fit">
         {mission.STRATEGY_QUEUE.map((strategy, index) => (
           <div className={`relative w-full h-fit `} key={index}>
             <div
-              className={`w-[70%] h-fit p-2 overflow-scroll no-scrollbar flex gap-2 items-center rounded-lg shadow-[0px_0px_2px_0.5px_rgba(0,0,0,0.2)] ${
+              className={`w-[70%] h-fit p-2 overflow-scroll no-scrollbar flex gap-2 items-center rounded-lg shadow-[0px_0px_2px_0.5px_rgba(0,0,0,0.2)] cursor-pointer ${
                 "bg-[" + missionColor + "]"
               }`}
+              onClick={() => {
+                setCurrentOpenStrategyName(strategy.FUNC);
+                setCurrentOpenStrategyID(strategy.ID);
+                onSelectParameterOpen();
+              }}
             >
               <div className="flex items-center justify-center p-[6px] shadow-[0px_0px_2px_0.5px_rgba(0,0,0,0.2)] rounded-lg">
                 {strategy.FUNC}
               </div>
               {Object.keys(strategy.ARGS).map((arg) => (
                 <div
-                  className="flex items-center justify-center p-[6px] shadow-[0px_0px_2px_0.5px_rgba(0,0,0,0.2)] rounded-lg hover:bg-[#ffffff66] cursor-pointer"
-                  onClick={() => {
-                    // TODO
-                  }}
+                  className="flex items-center justify-center p-[6px] shadow-[0px_0px_2px_0.5px_rgba(0,0,0,0.2)] rounded-lg"
                   key={arg}
                 >
                   {arg}:
@@ -190,6 +230,20 @@ export default function MissionBlock({
         handleConfirm={handleMissionName}
         title={`输入任务${mission.name}新的名称`}
       />
+
+      {/* select parameter modal */}
+      {currentOpenStrategyName !== "" && (
+        <SelectParameterModal
+          isOpen={isSelectParameterOpen}
+          onOpenChange={onSelectParameterOpenChange}
+          handleConfirm={handleSelectParameter}
+          strategyNames={strategyNames}
+          strategyContents={strategyContents}
+          currentOpenStrategyName={currentOpenStrategyName}
+          currentOpenStrategyID={currentOpenStrategyID}
+          configTable={configTable}
+        ></SelectParameterModal>
+      )}
     </div>
   );
 }

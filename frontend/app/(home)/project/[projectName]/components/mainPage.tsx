@@ -316,6 +316,7 @@ export default function MainPage({ projectName }: { projectName: string }) {
                   setMissionTable={setMissionTable}
                   handleStartMission={handleStartMission}
                   handleStopMission={handleStopMission}
+                  configTable={configTable}
                 />
               ))}
               {/* add mission */}
