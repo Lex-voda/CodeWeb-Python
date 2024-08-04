@@ -170,7 +170,7 @@ class ResourceModule:
         
         # 系统资源监控
         self.monitor_queue = queue.Queue()
-        clr.AddReference("bin/OpenHardwareMonitorLib")
+        clr.AddReference("Management_Layer/bin/OpenHardwareMonitorLib")
         from OpenHardwareMonitor.Hardware import Computer 
         self.compute = Computer()
         self.compute.CPUEnabled = True
