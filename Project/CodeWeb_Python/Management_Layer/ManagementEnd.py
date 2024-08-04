@@ -15,14 +15,14 @@ class ManagementEnd:
             os.path.dirname(
                 os.path.dirname(
                     os.path.dirname(os.path.abspath(__file__)))))
-        from CodeWeb_python.api import StrategyModule, ResourceModule, ConfigModule, DBManager
+        from CodeWeb_Python.api import StrategyModule, ResourceModule, ConfigModule, DBManager
         
         self.threads = {}   # 线程表
         self.output_dict = {}   # 输出表
         self.project_root = None   # 项目根目录绝对路径
         self.projects = []  # 项目集
         
-        self.res_manager = ResourceModule(sys_name="CodeWeb_python") # 资源管理器
+        self.res_manager = ResourceModule(sys_name="CodeWeb_Python") # 资源管理器
         self.strategy_manager = StrategyModule(self.res_manager)    # 策略管理器
         self.config_manager = ConfigModule(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'sys_config.json'))     # 配置管理器
         self.db_manager = DBManager(self.config_manager.get_db_params())    # 数据库管理器

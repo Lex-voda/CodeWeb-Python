@@ -1,12 +1,12 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-from CodeWeb_python.Management_Layer import ManagementEnd
+from ManagementEnd import ManagementEnd
 
 app = Flask(__name__)
 cors = CORS(app, origins="*")
 
-manager = ManagementEnd.ManagementEnd()
+manager = ManagementEnd()
 
 # 请求同步策略注册表
 @app.route('/file/strategy', methods=['GET'])
