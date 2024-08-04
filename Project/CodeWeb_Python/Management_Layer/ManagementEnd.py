@@ -22,7 +22,7 @@ class ManagementEnd:
         self.project_root = None   # 项目根目录绝对路径
         self.projects = []  # 项目集
         
-        self.res_manager = ResourceModule(sys_name="CodeWeb_Python") # 资源管理器
+        self.res_manager = ResourceModule(sys_name="CodeWeb_python") # 资源管理器
         self.strategy_manager = StrategyModule(self.res_manager)    # 策略管理器
         self.config_manager = ConfigModule(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'sys_config.json'))     # 配置管理器
         self.db_manager = DBManager(self.config_manager.get_db_params())    # 数据库管理器
@@ -182,4 +182,7 @@ class ManagementEnd:
         # 请求管理员权限
         print("请求管理员权限")
         ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
-    
+
+if __name__ == '__main__':
+    m = ManagementEnd()
+    m.get_system_monitor_info()
