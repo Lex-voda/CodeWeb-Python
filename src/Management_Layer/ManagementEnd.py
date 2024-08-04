@@ -15,7 +15,7 @@ class ManagementEnd:
             os.path.dirname(
                 os.path.dirname(
                     os.path.dirname(os.path.abspath(__file__)))))
-        from CodeWeb_python.api import StrategyModule, ResourceModule, ConfigModule, DBManager
+        from CodeWeb_Python.api import StrategyModule, ResourceModule, ConfigModule, DBManager
         
         self.threads = {}   # 线程表
         self.output_dict = {}   # 输出表
@@ -182,4 +182,7 @@ class ManagementEnd:
         # 请求管理员权限
         print("请求管理员权限")
         ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
-    
+
+if __name__ == '__main__':
+    m = ManagementEnd()
+    m.get_system_monitor_info()

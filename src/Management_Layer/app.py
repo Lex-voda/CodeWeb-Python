@@ -1,12 +1,14 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_socketio import SocketIO, emit
 
-from CodeWeb_python.Management_Layer import ManagementEnd
+from ManagementEnd import ManagementEnd
 
 app = Flask(__name__)
 cors = CORS(app, origins="*")
+socketio = SocketIO(app, async_mode='eventlet')
 
-manager = ManagementEnd.ManagementEnd()
+manager = ManagementEnd()
 
 # 请求同步策略注册表
 @app.route('/file/strategy', methods=['GET'])
@@ -133,28 +135,30 @@ def delete_file():
         return jsonify({"error": str(e)}), 500
 
 # 获取任务状态信息
-@app.route('/mission', methods=['GET'])
-def get_mission_status():
-    project_name = request.args.get('project_name')
+@socketio.on('get_mission_status')
+def handle_get_mission_status(data):
+    project_name = data.get('project_name')
     if not project_name:
-        return jsonify({"error": "Project name is required"}), 400
+        emit('mission_status_response', {"error": "Project name is required"})
+        return
     try:
         mission_status = manager.get_task_status(project_name)
-        return jsonify({"message": "Get mission status successfully", "status": mission_status}), 200
+        emit('mission_status_response', {"message": "Get mission status successfully", "status": mission_status})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        emit('mission_status_response', {"error": str(e)})
 
 # 执行任务
-@app.route('/mission', methods=['POST'])
-def send_mission():
-    data = request.get_json()
+@socketio.on('send_mission')
+def handle_send_mission(data):
     if not data:
-        return jsonify({"error": "Request body shouldn't be empty"}), 400
+        emit('mission_response', {"error": "Request body shouldn't be empty"})
+        return
     try:
         message, response = manager.execute(data)
-        return jsonify({"message": message, "data": response}), 200
+        emit('mission_response', {"message": message, "data": response})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        emit('mission_response', {"error": str(e)})
+
 
 # 停止或删除任务
 @app.route('/mission', methods=['DELETE'])
@@ -179,4 +183,4 @@ def get_system_status():
 
 
 if __name__ == "__main__":
-    app.run(host="localhost", port=8000, debug=True)
+    socketio.run(app, host="localhost", port=8000, debug=True)
