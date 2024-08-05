@@ -251,6 +251,7 @@ paths:
       summary: 通过 WebSocket 连接获取任务状态
       parameters:
       - name: project_name
+        in: query
         required: true
         schema:
             type: string
