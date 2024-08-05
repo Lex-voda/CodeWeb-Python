@@ -415,6 +415,12 @@ paths:
       tags:
         - 系统监控
       summary: 获取系统状态信息（允许空值）
+      parameters:
+      - name: project_name
+        in: query
+        required: true
+        schema:
+            type: string
       security:
         - bearerAuth: ['read']
       responses:
