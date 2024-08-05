@@ -24,6 +24,7 @@ paths:
       summary: 请求同步策略注册表
       parameters:
       - name: project_name
+        in: query
         required: true
         schema:
             type: string
@@ -47,6 +48,7 @@ paths:
       summary: 请求同步项目文件目录
       parameters:
       - name: project_name
+        in: query
         required: true
         schema:
             type: string
@@ -297,7 +299,7 @@ paths:
       summary: 停止运行中的任务或删除等待中的任务
       parameters:
         - in: query
-          name: mission_name
+          name: project_name
           schema:
             type: string
           required: true
