@@ -1,12 +1,14 @@
-openapi: 3.1.0
+openapi: 3.0.0
 info:
   title: OperationEnd API
-  version: 0.9.8
+  version: 1.0.0
   description: 系统OperationEnd组件的API
 
 servers:
-  - url: https://api.operationend.我是占位符.com/v1
+  - url: https://api.operationend.example.com/v1
 tags:
+  - name: 用户
+    description: 用于用户注册和登录的端点
   - name: 同步
     description: 用于同步各种数据的端点
   - name: 配置
@@ -17,9 +19,13 @@ tags:
     description: 用于管理和监控任务的端点
   - name: 系统监控
     description: 用于监控系统资源的端点
+  - name: 现场
+    description: 用于保存和恢复现场的端点
 paths:
   /auth/register:
     post:
+      tags:
+        - 用户
       summary: Register a new user
       requestBody:
         required: true
@@ -35,6 +41,8 @@ paths:
 
   /auth/login:
     post:
+      tags:
+        - 用户
       summary: User login
       requestBody:
         required: true
@@ -123,17 +131,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /file/config:
+    parameters:
+        - name: project_name
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 项目名
     get:
       tags:
         - 配置
       summary: 请求同步配置文件
       security:
         - bearerAuth: ['read']
-      parameters:
-      - name: project_name
-        required: true
-        schema:
-            type: string
       responses:
         '200':
           description: 同步成功
@@ -185,9 +195,6 @@ paths:
             schema: 
               type: object
               properties:
-                project_name:
-                  type: string
-                  description: 项目名
                 file_path:
                   type: string
                   description: 文件路径
@@ -430,14 +437,23 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /scene/{sceneId}:
+  /scene:
     parameters:
-      - in: path
-        name: sceneId
+      - in: query
+        name: project_name
         required: true
         schema:
           type: string
+        description: 项目名
+      - in: query
+        name: username
+        required: true
+        schema:
+          type: string
+        description: 用户名
     post:
+      tags:
+        - 现场
       summary: Save current scene
       security:
         - bearerAuth: ['write']
@@ -461,6 +477,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
     get:
+      tags:
+        - 现场
       summary: Restore project scene
       security:
         - bearerAuth: ['read']
@@ -593,11 +611,14 @@ components:
     ConfigurationRequest:
       type: object
       properties:
-        project_name:
+        message:
           type: string
-        content:
+        data:
           type: object
-          additionalProperties: true
+          properties:
+            configuration:
+              type: object
+              additionalProperties: true
     FileCreationRequest:
       type: object
       properties:
@@ -710,7 +731,14 @@ components:
           type: string
         scene:
           type: object
-          additionalProperties: true 
+          properties:
+            mission:
+              type: array
+              items:
+                type: object
+                $ref: '#/components/schemas/MissionRequest'
+            message:
+              type: string
 
     ErrorResponse:
       type: object
