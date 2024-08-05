@@ -226,12 +226,6 @@ paths:
       summary: 创建文件或文件夹
       security:
         - bearerAuth: ['write']
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FileCreationRequest'
       responses:
         '200':
           description: SuccessResponse
@@ -619,17 +613,9 @@ components:
             configuration:
               type: object
               additionalProperties: true
-    FileCreationRequest:
-      type: object
-      properties:
-        path:
-          type: string
     FileModificationRequest:
       type: object
       properties:
-        file_path:
-          type: string
-          description: 文件路径
         content:
           type: string
           description: 文件内容
