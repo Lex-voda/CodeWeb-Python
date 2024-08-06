@@ -65,19 +65,45 @@ const getConfig = async (project_name: string) =>
   );
 
 interface putConfigReq {
-  project_name: string;
-  content: any;
+  data: any;
 }
 
 interface putConfigRes {
   message: string;
 }
 
-const putConfig = async (data: Partial<putConfigReq>) =>
+const putConfig = async (project_name: string, content: any) =>
   await instance.put<putConfigReq, AxiosResponse<Partial<putConfigRes>>>(
     `/file/config`,
-    data
+    { data: content },
+    { params: { project_name } }
   );
+
+interface getFileContentRes {
+  message: string;
+  data: {
+    content: string;
+  };
+}
+
+const getFileContent = async (file_path: string) =>
+  await instance.get<any, AxiosResponse<Partial<getFileContentRes>>>(`/file`, {
+    params: { file_path },
+  });
+
+interface putFileContentReq {
+  content: string;
+}
+
+interface putFileContentRes {
+  message: string;
+}
+
+const putFileContent = async (project_name: string, content: string) =>
+  await instance.put<
+    putFileContentReq,
+    AxiosResponse<Partial<putFileContentRes>>
+  >(`/file`, { content }, { params: { project_name } });
 
 const API = {
   getProjectList,
@@ -86,6 +112,8 @@ const API = {
   postConfig,
   getConfig,
   putConfig,
+  getFileContent,
+  putFileContent,
 };
 
 export default API;
