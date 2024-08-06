@@ -28,7 +28,7 @@ export default async function Home() {
   const projectList = await getProjectList();
 
   return (
-    <div className="w-screen h-screen p-4 flex justify-center items-center ">
+    <div className="w-full h-screen p-4 flex justify-center items-center ">
       <div className="w-full max-w-xl h-[600px] no-scrollbar overflow-scroll flex flex-col items-center gap-6">
         {projectList.map((project: string) => (
           <a

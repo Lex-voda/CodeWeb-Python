@@ -41,6 +41,13 @@ export default function NavBar({
             <FiLogOut />
             <span>退出登录</span>
           </div>
+          <div
+            className="w-full flex gap-2 text-md items-center cursor-pointer p-2 bg-[#33333322] hover:bg-[#33333377] transition-background rounded-lg"
+            onClick={() => router.push("/")}
+          >
+            <FiLogOut />
+            <span>退出项目</span>
+          </div>
         </div>
       </div>
 
@@ -54,13 +61,18 @@ export default function NavBar({
       </div>
 
       <div
-        className="relative z-[1] w-screen h-screen transition-[clip-path]"
-        style={{
-          clipPath: closed
-            ? "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
-            : "polygon(250px 0%, 100% 0%, 100% 100%, 250px 100%)",
-        }}
+        className="relative z-[1] w-screen h-screen transition-[clip-path] flex"
+        // style={{
+        //   clipPath: closed
+        //     ? "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+        //     : "polygon(250px 0%, 100% 0%, 100% 100%, 250px 100%)",
+        // }}
       >
+        <div
+          className="w-[240px] h-full transition-width"
+          style={{ width: closed ? "0px" : "240px" }}
+        ></div>
+
         {children}
       </div>
     </>

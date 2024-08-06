@@ -9,9 +9,9 @@ export default async function Layout({
     children: React.ReactNode;
 }) {
     const userInfo = await serverGetUserInfo();
-    if (!userInfo) {
-        redirect("/login");
-    }
+    // if (!userInfo) {
+    //     redirect("/login");
+    // }
     return (
         <section>
             <NavBar>

@@ -25,11 +25,19 @@ import MissionBlock from "./missionBlock";
 import { IoAddSharp } from "react-icons/io5";
 import AddMissionModal from "./addMissionModal";
 import { ColorMapContext } from "../context/ColorMapContext";
+import CheckFileModal from "./checkFileModal";
+import io, { Socket } from "socket.io-client";
+
+let socket: Socket | null = null;
+if (process.env.NEXT_PUBLIC_TEST !== "test") {
+  socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!);
+}
 
 export default function MainPage({ projectName }: { projectName: string }) {
   const [closed, setClosed] = useState(false);
   const { width: windowWidth } = useWindow();
-  const { colorMap, updateColorMap, randomColors } = useContext(ColorMapContext);
+  const { colorMap, updateColorMap, randomColors } =
+    useContext(ColorMapContext);
 
   // message list
   const [messageList, setMessageList] = useState<Array<string>>([]);
@@ -120,17 +128,15 @@ export default function MainPage({ projectName }: { projectName: string }) {
       setMessageList([...messageList, "test: 配置文件路径成功！"]);
       return;
     }
-    API.postConfig({ file_path: path, project_name: projectName }).then(
-      (res) => {
-        if (res.status != 200) {
-          error("配置文件路径失败!");
-        } else {
-          success("配置文件路径成功!");
-          if (res.data.message)
-            setMessageList([...messageList, res.data.message]);
-        }
+    API.postConfig(path, projectName).then((res) => {
+      if (res.status != 200) {
+        error("配置文件路径失败!");
+      } else {
+        success("配置文件路径成功!");
+        if (res.data.message)
+          setMessageList([...messageList, res.data.message]);
       }
-    );
+    });
     API.getConfig(projectName).then((res) => {
       if (res.status === 200) {
         if (res.data.message)
@@ -158,18 +164,16 @@ export default function MainPage({ projectName }: { projectName: string }) {
     }
     let tempConfigTable = configTable;
     tempConfigTable[modifyConfigKey] = newValue;
-    API.putConfig({ project_name: projectName, content: tempConfigTable }).then(
-      (res) => {
-        if (res.status != 200) {
-          error("修改配置项失败!");
-        } else {
-          if (res.data.message)
-            setMessageList([...messageList, res.data.message]);
-          success("修改配置项成功！");
-          setConfigTable(tempConfigTable);
-        }
+    API.putConfig(projectName, tempConfigTable).then((res) => {
+      if (res.status != 200) {
+        error("修改配置项失败!");
+      } else {
+        if (res.data.message)
+          setMessageList([...messageList, res.data.message]);
+        success("修改配置项成功！");
+        setConfigTable(tempConfigTable);
       }
-    );
+    });
   };
 
   // 任务表
@@ -179,7 +183,37 @@ export default function MainPage({ projectName }: { projectName: string }) {
     onOpen: onAddMissionOpen,
     onOpenChange: onAddMissionOpenChange,
   } = useDisclosure();
-  
+
+  useEffect(() => {
+    if (socket) {
+      // 监听任务状态
+      socket.on("mission_status_response", (data) => {
+        if (data.message) setMessageList([...messageList, data.message]);
+        if (data.status)
+          for (let i = 0; i < Object.keys(data.status).length; i++) {
+            if (projectName === Object.keys(data.status)[i]) {
+              if (data.status[Object.keys(data.status)[i]] != true) {
+                setCurrentMission("");
+              }
+            }
+          }
+      });
+
+      // 监听任务执行结果
+      socket.on("mission_response", (data) => {
+        if (data.message) setMessageList([...messageList, data.message]);
+        if (data.data) console.log(data.data);
+        // TODO: show pic with canvas
+      });
+
+      // 清理事件监听器
+      return () => {
+        socket.off("mission_status_response");
+        socket.off("mission_response");
+      };
+    }
+  }, []);
+
   const handleAddMission = (missionName: string, iterable: boolean) => {
     setMissionTable((prev) => {
       return [
@@ -201,16 +235,49 @@ export default function MainPage({ projectName }: { projectName: string }) {
     missionData[projectName] = {};
     missionData[projectName][missionTable[index].name] = tempMission;
     console.log("posted mission: ", missionData);
-    setCurrentMission(missionTable[index].name);
+    if (process.env.NEXT_PUBLIC_TEST === "test") {
+      setMessageList([...messageList, "test: 开始任务成功！"]);
+      setCurrentMission(missionTable[index].name);
+    } else {
+      if (socket) {
+        socket.emit("send_mission", missionData);
+        setCurrentMission(missionTable[index].name);
+      }
+    }
+  };
+
+  const getMissionStatus = () => {
+    if (socket)
+      socket.emit("get_mission_status", { project_name: projectName });
   };
 
   const handleStopMission = (index: number) => {
     console.log("stop mission: ", missionTable[index].name);
-    setCurrentMission("");
+    if (process.env.NEXT_PUBLIC_TEST === "test") {
+      setMessageList([...messageList, "test: 停止任务成功！"]);
+      setCurrentMission("");
+    } else {
+      API.deleteMission(projectName).then((res) => {
+        if (res.status === 200) {
+          if (res.data.message)
+            setMessageList([...messageList, res.data.message]);
+          setCurrentMission("");
+        } else {
+          error("停止任务失败！");
+        }
+      });
+    }
   };
 
   // 当前运行任务
   const [currentMission, setCurrentMission] = useState<string>("");
+
+  // check file
+  const {
+    isOpen: isCheckFileOpen,
+    onOpen: onCheckFileOpen,
+    onOpenChange: onCheckFileOpenChange,
+  } = useDisclosure();
 
   return (
     <>
@@ -239,6 +306,13 @@ export default function MainPage({ projectName }: { projectName: string }) {
             <FiLogOut />
             <span>配置文件路径</span>
           </div>
+          <div
+            className="w-full flex gap-2 items-center cursor-pointer p-2 bg-[#33333322] hover:bg-[#33333377] transition-background rounded-lg"
+            onClick={onCheckFileOpen}
+          >
+            <FiLogOut />
+            <span>查看文件</span>
+          </div>
         </div>
         {/* bottom part */}
         <div className="min-w-[136px] flex flex-col gap-2"></div>
@@ -253,108 +327,116 @@ export default function MainPage({ projectName }: { projectName: string }) {
         {closed ? <FaChevronLeft /> : <FaChevronRight />}
       </div>
 
-      {/* main part */}
-      <div
-        className="w-screen h-screen p-10 flex justify-between transition-[clip-path]"
-        style={{
-          clipPath: closed
-            ? "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
-            : `polygon(0% 0%, ${windowWidth - 170}px 0%, ${
-                windowWidth - 170
-              }px 100%, 0% 100%)`,
-        }}
-      >
-        {/* left part */}
-        <div className="w-[55%] h-full flex flex-col justify-between">
-          {/* config part */}
-          <div className="w-fit h-[35%] flex flex-col gap-2 p-4 rounded-xl bg-[#66666622]">
-            <p>配置块：</p>
-            <Table
-              aria-label="Example static collection table"
-              className=" max-h-full overflow-scroll no-scrollbar"
-              classNames={{
-                wrapper:
-                  " max-h-full overflow-scroll no-scrollbar bg-[#ffffff66]",
-              }}
-              isHeaderSticky={true}
-            >
-              <TableHeader>
-                <TableColumn className="bg-[#ffffff22]">Key</TableColumn>
-                <TableColumn className="bg-[#ffffff22]">Value</TableColumn>
-              </TableHeader>
-              <TableBody>
-                {Object.keys(configTable).map((configName, index) => {
-                  return (
-                    <TableRow key={index}>
-                      <TableCell className="p-0">
-                        <div
-                          className="p-1 rounded-lg flex items-center justify-center"
-                          style={{
-                            backgroundColor: colorMap.get(configName),
-                          }}
-                        >
-                          {configName}
-                        </div>
-                      </TableCell>
-                      <TableCell className="relative w-full pr-6">
-                        <span>
-                          {typeof configTable[configName] === "object"
-                            ? JSON.stringify(configTable[configName])
-                            : String(configTable[configName])}
-                        </span>
-                        <BiSolidEdit
-                          className="!absolute h-full flex items-center top-0 right-2 cursor-pointer"
-                          onClick={() => {
-                            setModifyConfigKey(configName);
-                            onModifyConfigOpen();
-                          }}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-          {/* mission part */}
-          <div className="w-full h-[60%] flex flex-col gap-2 p-4 rounded-xl bg-[#66666622] overflow-scroll no-scrollbar">
-            <p>任务块：</p>
-            <div className="w-full h-fit flex flex-col gap-2">
-              {missionTable.map((mission, index) => (
-                <MissionBlock
-                  missionIndex={index}
-                  mission={mission}
-                  missionTable={missionTable}
-                  currentMission={currentMission}
-                  strategyNames={strategyNames}
-                  strategyContents={strategyContents}
-                  setMissionTable={setMissionTable}
-                  handleStartMission={handleStartMission}
-                  handleStopMission={handleStopMission}
-                  configTable={configTable}
-                />
-              ))}
-              {/* add mission */}
-              <div
-                className="w-20 h-20 flex justify-center items-center border-dashed border-2 border-[#ffffff66] cursor-pointer"
-                onClick={onAddMissionOpen}
+      <div className="flex h-screen w-full">
+        {/* main part */}
+        <div
+          className="w-full h-screen p-10 flex justify-between transition-[clip-path] mx-10"
+          // style={{
+          //   clipPath: closed
+          //     ? "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
+          //     : `polygon(0% 0%, ${windowWidth - 170}px 0%, ${
+          //         windowWidth - 170
+          //       }px 100%, 0% 100%)`,
+          // }}
+        >
+          {/* left part */}
+          <div className="w-[55%] h-full flex flex-col justify-between">
+            {/* config part */}
+            <div className="w-fit h-[35%] flex flex-col gap-2 p-4 rounded-xl bg-[#66666622]">
+              <p>配置块：</p>
+              <Table
+                aria-label="Example static collection table"
+                className=" max-h-full overflow-scroll no-scrollbar"
+                classNames={{
+                  wrapper:
+                    " max-h-full overflow-scroll no-scrollbar bg-[#ffffff66]",
+                }}
+                isHeaderSticky={true}
               >
-                <IoAddSharp className="size-14 text-[#ffffff66]" />
+                <TableHeader>
+                  <TableColumn className="bg-[#ffffff22]">Key</TableColumn>
+                  <TableColumn className="bg-[#ffffff22]">Value</TableColumn>
+                </TableHeader>
+                <TableBody>
+                  {Object.keys(configTable).map((configName, index) => {
+                    return (
+                      <TableRow key={index}>
+                        <TableCell className="p-0">
+                          <div
+                            className="p-1 rounded-lg flex items-center justify-center"
+                            style={{
+                              backgroundColor: colorMap.get(configName),
+                            }}
+                          >
+                            {configName}
+                          </div>
+                        </TableCell>
+                        <TableCell className="relative w-full pr-6">
+                          <span>
+                            {typeof configTable[configName] === "object"
+                              ? JSON.stringify(configTable[configName])
+                              : String(configTable[configName])}
+                          </span>
+                          <BiSolidEdit
+                            className="!absolute h-full flex items-center top-0 right-2 cursor-pointer"
+                            onClick={() => {
+                              setModifyConfigKey(configName);
+                              onModifyConfigOpen();
+                            }}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+            {/* mission part */}
+            <div className="w-full h-[60%] flex flex-col gap-2 p-4 rounded-xl bg-[#66666622] overflow-scroll no-scrollbar">
+              <p>任务块：</p>
+              <div className="w-full h-fit flex flex-col gap-2">
+                {missionTable.map((mission, index) => (
+                  <MissionBlock
+                    missionIndex={index}
+                    mission={mission}
+                    missionTable={missionTable}
+                    currentMission={currentMission}
+                    strategyNames={strategyNames}
+                    strategyContents={strategyContents}
+                    setMissionTable={setMissionTable}
+                    handleStartMission={handleStartMission}
+                    handleStopMission={handleStopMission}
+                    configTable={configTable}
+                  />
+                ))}
+                {/* add mission */}
+                <div
+                  className="w-20 h-20 flex justify-center items-center border-dashed border-2 border-[#ffffff66] cursor-pointer"
+                  onClick={onAddMissionOpen}
+                >
+                  <IoAddSharp className="size-14 text-[#ffffff66]" />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        {/* right part */}
-        <div className="w-[40%] h-full flex flex-col justify-between gap-2 p-4 rounded-xl bg-[#66666622]">
-          <p>消息列表：</p>
-          <div className="w-full h-full flex flex-col gap-1 overflow-scroll no-scrollbar bg-[#ffffff66] rounded-lg p-2">
-            {messageList.map((message, index) => (
-              <div key={index} className="text-xs">
-                {message}
-              </div>
-            ))}
+          {/* right part */}
+          <div className="w-[40%] h-full flex flex-col justify-between gap-2 p-4 rounded-xl bg-[#66666622]">
+            <p>消息列表：</p>
+            <div className="w-full h-full flex flex-col gap-1 overflow-scroll no-scrollbar bg-[#ffffff66] rounded-lg p-2">
+              {messageList.map((message, index) => (
+                <div key={index} className="text-xs">
+                  {message}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
+
+        {/* right block */}
+        <div
+          className="w-[160px] h-full transition-width"
+          style={{ width: closed ? "0px" : "160px" }}
+        ></div>
       </div>
 
       {/* strategy modal */}
@@ -385,6 +467,15 @@ export default function MainPage({ projectName }: { projectName: string }) {
         onOpenChange={onAddMissionOpenChange}
         handleConfirm={handleAddMission}
       />
+
+      {/* check file */}
+      <CheckFileModal
+        isOpen={isCheckFileOpen}
+        onOpenChange={onCheckFileOpenChange}
+        messageList={messageList}
+        setMessageList={setMessageList}
+        projectName={projectName}
+      ></CheckFileModal>
     </>
   );
 }

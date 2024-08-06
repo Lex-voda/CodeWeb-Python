@@ -10,7 +10,7 @@ async function signUpClicked(username: string, password: string) {
     }
     let result = 'failed';
     await axios
-      .post(`${process.env.NEXT_PUBLIC_HOST}/Signup`, {
+      .post(`${process.env.NEXT_PUBLIC_HOST}/auth/register`, {
         username: username,
         password: sha256(password),
       })
@@ -41,7 +41,7 @@ async function signInClicked(username: string, password: string) {
     }
     let result = 'failed';
     await axios
-      .post(`${process.env.NEXT_PUBLIC_HOST}/Login`, {
+      .post(`${process.env.NEXT_PUBLIC_HOST}/auth/login`, {
         username: username,
         password: sha256(password),
       })

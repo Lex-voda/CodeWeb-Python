@@ -79,7 +79,7 @@ export default function MissionBlock({
       {
         FUNC: strategyName,
         ARGS: newARGS,
-        ID: "RMT_" + strategyCount.current++,
+        ID: "Func_" + strategyCount.current++,
       },
     ];
     setMissionTable(newMissionTable);
@@ -139,7 +139,6 @@ export default function MissionBlock({
       let strategy = mission.STRATEGY_QUEUE[i];
       if (colorMap.has(strategy.ID)) continue;
       updateColorMap(strategy.ID, randomColors[originSize + i]);
-      console.log(colorMap);
     }
   }, [mission.STRATEGY_QUEUE, colorMap]);
 
@@ -214,6 +213,11 @@ export default function MissionBlock({
                   onSelectParameterOpen();
                 }}
               >
+                <div
+                  className="flex items-center justify-center bg-gradient-to-tr from-[#91bef0] to-[violet] bg-clip-text text-transparent text-lg px-[6px] py-1 shadow-[0px_0px_2px_0.5px_rgba(0,0,0,0.2)] rounded-lg"
+                >
+                  ID: {strategy.ID}
+                </div>
                 <div
                   className="flex items-center justify-center p-[6px] shadow-[0px_0px_2px_0.5px_rgba(0,0,0,0.2)] rounded-lg"
                   style={{

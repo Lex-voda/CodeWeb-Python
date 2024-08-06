@@ -9,7 +9,7 @@ export default async function Page({
 }) {
   return (
     <>
-      <RootDirLayout>
+      <RootDirLayout projectName={params.projectName}>
         <ColorMapLayout>
           <MainPage projectName={params.projectName} />
         </ColorMapLayout>
