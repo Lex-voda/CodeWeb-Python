@@ -8,8 +8,10 @@ interface DirectoryRes {
   };
 }
 
-const getDirectory = async () =>
-  await instance.get<any, AxiosResponse<DirectoryRes>>("/sync/file/directory");
+const getDirectory = async (project_name: string) =>
+  await instance.get<any, AxiosResponse<DirectoryRes>>("/file/directory", {
+    params: { project_name: project_name },
+  });
 
 interface ProjectListRes {
   message: string;
@@ -17,10 +19,9 @@ interface ProjectListRes {
     project_list: [string];
   };
 }
+
 const getProjectList = async () =>
-  await instance.get<any, AxiosResponse<ProjectListRes>>(
-    "/sync/file/project-list"
-  );
+  await instance.get<any, AxiosResponse<ProjectListRes>>("/file/project-list");
 
 interface strategyRes {
   message: string;
@@ -30,23 +31,23 @@ interface strategyRes {
 }
 
 const getStrategy = async (project_name: string) =>
-  await instance.get<any, AxiosResponse<strategyRes>>("/sync/file/strategy", {
+  await instance.get<any, AxiosResponse<strategyRes>>("/file/strategy", {
     params: { project_name: project_name },
   });
 
 interface postConfigReq {
   file_path: string;
-  project_name: string;
 }
 
 interface postConfigRes {
   message: string;
 }
 
-const postConfig = async (data: Partial<postConfigReq>) =>
+const postConfig = async (file_path: string, project_name: string) =>
   await instance.post<postConfigReq, AxiosResponse<Partial<postConfigRes>>>(
     `/file/config`,
-    data
+    { file_path },
+    { params: { project_name } }
   );
 
 interface getConfigRes {
@@ -105,6 +106,16 @@ const putFileContent = async (project_name: string, content: string) =>
     AxiosResponse<Partial<putFileContentRes>>
   >(`/file`, { content }, { params: { project_name } });
 
+interface deleteMissionRes {
+  message: string;
+}
+
+const deleteMission = async (project_name: string) =>
+  await instance.delete<any, AxiosResponse<Partial<deleteMissionRes>>>(
+    `/mission`,
+    { params: { project_name } }
+  );
+
 const API = {
   getProjectList,
   getDirectory,
@@ -114,6 +125,7 @@ const API = {
   putConfig,
   getFileContent,
   putFileContent,
+  deleteMission,
 };
 
 export default API;

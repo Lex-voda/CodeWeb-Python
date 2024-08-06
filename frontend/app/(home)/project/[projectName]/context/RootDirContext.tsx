@@ -14,8 +14,10 @@ export const RootDirContext = createContext<{
 
 export default function RootDirLayout({
   children,
+  projectName,
 }: {
   children: React.ReactNode;
+  projectName: string;
 }) {
   const [RootDir, setRootDir] = useState<any>(testFileDirectory);
 
@@ -23,7 +25,7 @@ export default function RootDirLayout({
     if (process.env.NEXT_PUBLIC_TEST === "test") {
       setRootDir(testFileDirectory);
     } else {
-      API.getDirectory().then((res) => {
+      API.getDirectory(projectName).then((res) => {
         setRootDir(res.data.data.file_directory);
       });
     }

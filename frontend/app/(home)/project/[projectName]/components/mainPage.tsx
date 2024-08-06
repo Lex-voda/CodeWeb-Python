@@ -26,6 +26,12 @@ import { IoAddSharp } from "react-icons/io5";
 import AddMissionModal from "./addMissionModal";
 import { ColorMapContext } from "../context/ColorMapContext";
 import CheckFileModal from "./checkFileModal";
+import io, { Socket } from "socket.io-client";
+
+let socket: Socket | null = null;
+if (process.env.NEXT_PUBLIC_TEST !== "test") {
+  socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!);
+}
 
 export default function MainPage({ projectName }: { projectName: string }) {
   const [closed, setClosed] = useState(false);
@@ -122,17 +128,15 @@ export default function MainPage({ projectName }: { projectName: string }) {
       setMessageList([...messageList, "test: 配置文件路径成功！"]);
       return;
     }
-    API.postConfig({ file_path: path, project_name: projectName }).then(
-      (res) => {
-        if (res.status != 200) {
-          error("配置文件路径失败!");
-        } else {
-          success("配置文件路径成功!");
-          if (res.data.message)
-            setMessageList([...messageList, res.data.message]);
-        }
+    API.postConfig(path, projectName).then((res) => {
+      if (res.status != 200) {
+        error("配置文件路径失败!");
+      } else {
+        success("配置文件路径成功!");
+        if (res.data.message)
+          setMessageList([...messageList, res.data.message]);
       }
-    );
+    });
     API.getConfig(projectName).then((res) => {
       if (res.status === 200) {
         if (res.data.message)
@@ -180,6 +184,36 @@ export default function MainPage({ projectName }: { projectName: string }) {
     onOpenChange: onAddMissionOpenChange,
   } = useDisclosure();
 
+  useEffect(() => {
+    if (socket) {
+      // 监听任务状态
+      socket.on("mission_status_response", (data) => {
+        if (data.message) setMessageList([...messageList, data.message]);
+        if (data.data)
+          for (let i = 0; i < Object.keys(data.data).length; i++) {
+            if (currentMission === Object.keys(data.data)[i]) {
+              if (data.data[Object.keys(data.data)[i]] != true) {
+                setCurrentMission("");
+              }
+            }
+          }
+      });
+
+      // 监听任务执行结果
+      socket.on("mission_response", (data) => {
+        if (data.message) setMessageList([...messageList, data.message]);
+        if (data.data) console.log(data.data);
+        // TODO: show pic with canvas
+      });
+
+      // 清理事件监听器
+      return () => {
+        socket.off("mission_status_response");
+        socket.off("mission_response");
+      };
+    }
+  }, []);
+
   const handleAddMission = (missionName: string, iterable: boolean) => {
     setMissionTable((prev) => {
       return [
@@ -201,12 +235,38 @@ export default function MainPage({ projectName }: { projectName: string }) {
     missionData[projectName] = {};
     missionData[projectName][missionTable[index].name] = tempMission;
     console.log("posted mission: ", missionData);
-    setCurrentMission(missionTable[index].name);
+    if (process.env.NEXT_PUBLIC_TEST === "test") {
+      setMessageList([...messageList, "test: 开始任务成功！"]);
+      setCurrentMission(missionTable[index].name);
+    } else {
+      if (socket) {
+        socket.emit("send_mission", missionData);
+        setCurrentMission(missionTable[index].name);
+      }
+    }
+  };
+
+  const getMissionStatus = () => {
+    if (socket)
+      socket.emit("get_mission_status", { project_name: projectName });
   };
 
   const handleStopMission = (index: number) => {
     console.log("stop mission: ", missionTable[index].name);
-    setCurrentMission("");
+    if (process.env.NEXT_PUBLIC_TEST === "test") {
+      setMessageList([...messageList, "test: 停止任务成功！"]);
+      setCurrentMission("");
+    } else {
+      API.deleteMission(projectName).then((res) => {
+        if (res.status === 200) {
+          if (res.data.message)
+            setMessageList([...messageList, res.data.message]);
+          setCurrentMission("");
+        } else {
+          error("停止任务失败！");
+        }
+      });
+    }
   };
 
   // 当前运行任务

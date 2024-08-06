@@ -139,7 +139,6 @@ export default function MissionBlock({
       let strategy = mission.STRATEGY_QUEUE[i];
       if (colorMap.has(strategy.ID)) continue;
       updateColorMap(strategy.ID, randomColors[originSize + i]);
-      console.log(colorMap);
     }
   }, [mission.STRATEGY_QUEUE, colorMap]);
 
