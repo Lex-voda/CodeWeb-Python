@@ -189,10 +189,10 @@ export default function MainPage({ projectName }: { projectName: string }) {
       // 监听任务状态
       socket.on("mission_status_response", (data) => {
         if (data.message) setMessageList([...messageList, data.message]);
-        if (data.data)
-          for (let i = 0; i < Object.keys(data.data).length; i++) {
-            if (projectName === Object.keys(data.data)[i]) {
-              if (data.data[Object.keys(data.data)[i]] != true) {
+        if (data.status)
+          for (let i = 0; i < Object.keys(data.status).length; i++) {
+            if (projectName === Object.keys(data.status)[i]) {
+              if (data.status[Object.keys(data.status)[i]] != true) {
                 setCurrentMission("");
               }
             }
