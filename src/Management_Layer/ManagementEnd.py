@@ -2,7 +2,8 @@ import os
 import sys
 import concurrent.futures
 import ctypes
-from utils import ThreadOutputStream 
+import inspect
+import threading
 
 class ManagementEnd:
     def __init__(self):
@@ -22,7 +23,7 @@ class ManagementEnd:
         self.project_root = None   # 项目根目录绝对路径
         self.projects = []  # 项目集
         
-        self.res_manager = ResourceModule(sys_name="CodeWeb_python") # 资源管理器
+        self.res_manager = ResourceModule(sys_name="CodeWeb_Python") # 资源管理器
         self.strategy_manager = StrategyModule(self.res_manager)    # 策略管理器
         self.config_manager = ConfigModule(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'sys_config.json'))     # 配置管理器
         self.db_manager = DBManager(self.config_manager.get_db_params())    # 数据库管理器
@@ -78,30 +79,33 @@ class ManagementEnd:
         """
         执行任务
         """
-        output_message_dict = {}
-        output_data_dict = {}
         print("--开始执行--")
         
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            future_to_project = {
-                executor.submit(self._thread_wrapper, project_name, project, ThreadOutputStream()): project_name
-                for project_name, project in message.items()
-            }
-            for future in concurrent.futures.as_completed(future_to_project):
-                project_name = future_to_project[future]
-                try:
-                    output_data_dict[project_name], output_message_dict[project_name] = future.result()
-                except Exception as exc:
-                    print(f"{project_name} 生成异常: {exc}")
-                
+            future_to_project = {}
+        for project_name, project in message.items():
+            future = executor.submit(self._thread_wrapper, project_name, project)
+            future_to_project[future] = project_name
+            # 设置线程名称
+            thread = threading.Thread(target=self._thread_wrapper, name=project_name, args=(project_name, project))
+            self.threads.append(thread)
+
+        for future in concurrent.futures.as_completed(future_to_project):
+            project_name = future_to_project[future]
+            try:
+                output_data = future.result()
+            except Exception as exc:
+                print(f"{project_name} 生成异常: {exc}")
+
         print("==所有执行完成==")
-        return output_message_dict, output_data_dict
+        return output_data
     
     def remove_thread(self, project_name):
         """
         根据名字删除线程
         """
         if project_name in self.threads:
+            self._stop_thread(self.threads[project_name])
             del self.threads[project_name]
             print(f"线程 {project_name} 已删除")
         else:
@@ -118,7 +122,8 @@ class ManagementEnd:
         同步用户配置文件
         """
         user_config_path = self.db_manager.get_project_config_path(project_name)
-        user_config_path = os.path.join(self.project_root, project_name, user_config_path)
+        print(project_name, user_config_path)
+        user_config_path = os.path.join(self.project_root, project_name, user_config_path) if user_config_path else None
         self.config_manager.sync(project_name, user_config_path)
         return self.config_manager.user_config[project_name]
     
@@ -155,12 +160,11 @@ class ManagementEnd:
         """
         return self.res_manager.monitor_queue.get(timeout=1.5)
     
-    def _thread_wrapper(self, project_name, project, output):
+    def _thread_wrapper(self, project_name, project):
         """
         包装线程的执行函数，在完成后从self.threads中删除线程
         """
-        self.strategy_manager.execute_project(project_name, project, self.config_manager.user_config[project_name], output)
-        self.output_dict[project_name] = ''.join(output.contents)
+        self.strategy_manager.execute_project(project_name, project, self.config_manager.user_config[project_name])
         del self.threads[project_name]
     
     def _monitor_system_resources(self):
@@ -182,6 +186,23 @@ class ManagementEnd:
         # 请求管理员权限
         print("请求管理员权限")
         ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+        
+    def __async_raise(self, tid, exctype):
+        """raises the exception, performs cleanup if needed"""
+        tid = ctypes.c_long(tid)
+        if not inspect.isclass(exctype):
+            exctype = type(exctype)
+        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(exctype))
+        if res == 0:
+            raise ValueError("invalid thread id")
+        elif res != 1:
+            # if it returns a number greater than one, you're in trouble,
+            # and you should call it again with exc=NULL to revert the effect
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
+            raise SystemError("PyThreadState_SetAsyncExc failed")
+
+    def _stop_thread(self, thread):
+        self.__async_raise(thread.ident, SystemExit)
 
 if __name__ == '__main__':
     m = ManagementEnd()
