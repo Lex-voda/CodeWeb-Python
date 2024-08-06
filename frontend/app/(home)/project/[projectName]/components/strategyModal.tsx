@@ -69,10 +69,16 @@ export default function StrategyModal({
                                   <TableRow key={argu["argu_name"]}>
                                     <TableCell>{argu["argu_name"]}</TableCell>
                                     <TableCell>
-                                      {argu["argu_annotation"]}
+                                      {argu["argu_annotation"].split("'")[1] ===
+                                      "inspect._empty"
+                                        ? "None"
+                                        : argu["argu_annotation"].split("'")[1]}
                                     </TableCell>
                                     <TableCell>
-                                      {argu["argu_default"]}
+                                      {argu["argu_default"].split("'")[1] ===
+                                      "inspect._empty"
+                                        ? "None"
+                                        : argu["argu_default"].split("'")[1]}
                                     </TableCell>
                                   </TableRow>
                                 );
@@ -81,11 +87,13 @@ export default function StrategyModal({
                           </Table>
                         </TableCell>
                         <TableCell>
-                          {
-                            content[Object.keys(content)[index]][
-                              "return_annotation"
-                            ]
-                          }
+                          {content[Object.keys(content)[index]][
+                            "return_annotation"
+                          ].split("'")[1] === "inspect._empty"
+                            ? "None"
+                            : content[Object.keys(content)[index]][
+                                "return_annotation"
+                              ].split("'")[1]}
                         </TableCell>
                         <TableCell>
                           {content[Object.keys(content)[index]]["comment"]}

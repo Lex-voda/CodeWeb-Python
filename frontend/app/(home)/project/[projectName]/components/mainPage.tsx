@@ -88,12 +88,13 @@ export default function MainPage({ projectName }: { projectName: string }) {
         if (res.status === 200) {
           success("获取策略注册表成功！");
           setMessageList([...messageList, res.data.message]);
-          return res.data.data.strategy_registry;
+          // return res.data.data.strategy_registry;
+          setStrategyTable(res.data.data.strategy_registry);
         } else {
           error("获取策略注册表失败！");
         }
       });
-      setStrategyTable(strategytable);
+      // setStrategyTable(strategytable);
     }
   };
   useEffect(() => {

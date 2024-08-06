@@ -111,8 +111,18 @@ export default function SelectParameterModal({
                             return (
                               <TableRow key={argu["argu_name"]}>
                                 <TableCell>{argu["argu_name"]}</TableCell>
-                                <TableCell>{argu["argu_annotation"]}</TableCell>
-                                <TableCell>{argu["argu_default"]}</TableCell>
+                                <TableCell>
+                                  {argu["argu_annotation"].split("'")[1] ===
+                                  "inspect._empty"
+                                    ? "None"
+                                    : argu["argu_annotation"].split("'")[1]}
+                                </TableCell>
+                                <TableCell>
+                                  {argu["argu_default"].split("'")[1] ===
+                                  "inspect._empty"
+                                    ? "None"
+                                    : argu["argu_default"].split("'")[1]}
+                                </TableCell>
                               </TableRow>
                             );
                           })}
@@ -120,11 +130,13 @@ export default function SelectParameterModal({
                       </Table>
                     </TableCell>
                     <TableCell>
-                      {
-                        strategyContents[
-                          strategyNames.indexOf(currentOpenStrategyName)
-                        ]["return_annotation"]
-                      }
+                      {strategyContents[
+                        strategyNames.indexOf(currentOpenStrategyName)
+                      ]["return_annotation"].split("'")[1] === "inspect._empty"
+                        ? "None"
+                        : strategyContents[
+                            strategyNames.indexOf(currentOpenStrategyName)
+                          ]["return_annotation"].split("'")[1]}
                     </TableCell>
                     <TableCell>
                       {
