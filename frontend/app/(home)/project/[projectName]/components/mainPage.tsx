@@ -191,7 +191,7 @@ export default function MainPage({ projectName }: { projectName: string }) {
         if (data.message) setMessageList([...messageList, data.message]);
         if (data.data)
           for (let i = 0; i < Object.keys(data.data).length; i++) {
-            if (currentMission === Object.keys(data.data)[i]) {
+            if (projectName === Object.keys(data.data)[i]) {
               if (data.data[Object.keys(data.data)[i]] != true) {
                 setCurrentMission("");
               }
