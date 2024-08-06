@@ -112,7 +112,6 @@ export default function CheckFileModal({
           setCurrentPath(rootPath);
           setCurrentDir(RootDir);
           setCurrentSelectedFile("");
-          setCurrentSelectedFileContent("");
         }}
         onClick={(e) => {
           e.stopPropagation();

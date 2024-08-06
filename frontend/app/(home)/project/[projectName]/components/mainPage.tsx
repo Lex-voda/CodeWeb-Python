@@ -3,7 +3,7 @@ import { testStrategy } from "@/app/constants/testStrategy";
 import { Mission, StrategyContent } from "@/app/interfaces/project";
 import API from "@/app/utils/api";
 import { useContext, useEffect, useState } from "react";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight, FaRegFile } from "react-icons/fa";
 import { FiLogOut } from "react-icons/fi";
 import StrategyModal from "./strategyModal";
 import { useDisclosure } from "@nextui-org/react";
@@ -26,6 +26,8 @@ import { IoAddSharp } from "react-icons/io5";
 import AddMissionModal from "./addMissionModal";
 import { ColorMapContext } from "../context/ColorMapContext";
 import CheckFileModal from "./checkFileModal";
+import { PiStrategy } from "react-icons/pi";
+import { PiPath } from "react-icons/pi";
 import io, { Socket } from "socket.io-client";
 
 let socket: Socket | null = null;
@@ -296,21 +298,21 @@ export default function MainPage({ projectName }: { projectName: string }) {
             className="w-full flex gap-2 items-center cursor-pointer p-2 bg-[#33333322] hover:bg-[#33333377] transition-background rounded-lg"
             onClick={onStrategyOpen}
           >
-            <FiLogOut />
+            <PiStrategy />
             <span>查看策略注册表</span>
           </div>
           <div
             className="w-full flex gap-2 items-center cursor-pointer p-2 bg-[#33333322] hover:bg-[#33333377] transition-background rounded-lg"
             onClick={onConfigOpen}
           >
-            <FiLogOut />
+            <PiPath />
             <span>配置文件路径</span>
           </div>
           <div
             className="w-full flex gap-2 items-center cursor-pointer p-2 bg-[#33333322] hover:bg-[#33333377] transition-background rounded-lg"
             onClick={onCheckFileOpen}
           >
-            <FiLogOut />
+            <FaRegFile />
             <span>查看文件</span>
           </div>
         </div>
