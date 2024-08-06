@@ -637,10 +637,10 @@ components:
       properties:
         message:
           type: string
-        data:
+        status:
           type: object
           additionalProperties:
-            type: object
+            type: boolean
     MissionRequest:
       type: object
       additionalProperties:
@@ -673,10 +673,10 @@ components:
       properties:
         message:
           type: string
-        data:
+        status:
           type: object
           additionalProperties:
-            type: object
+            type: boolean
     SystemStatusResponse:
       type: object
       properties:
@@ -722,7 +722,6 @@ components:
             mission:
               type: array
               items:
-                type: object
                 $ref: '#/components/schemas/MissionRequest'
             message:
               type: string
