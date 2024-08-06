@@ -85,23 +85,14 @@ class StrategyModule:
             raise ValueError(f"项目 {project_name} 未注册")
     
     # 执行项目
-    def execute_project(self,project_name, project, config, output=None):
-        original_stdout = sys.stdout
-        original_stderr = sys.stderr
-        try:
-            sys.stdout = output
-            sys.stderr = output
-
-            print(f"--开始执行项目 {project_name}--")
-            for task_name, task in project.items():
-                print(f"--执行任务 {task_name}")
-                output_data_dict = self._execute_task(project_name, task, config)
-                print(f"==任务 {task_name} 执行完成==")
-            print(f"==项目 {project_name} 执行完成==")
-        finally:
-            sys.stdout = original_stdout
-            sys.stderr = original_stderr
-        return output_data_dict, output.getvalue()
+    def execute_project(self,project_name, project, config):
+        print(f"--开始执行项目 {project_name}--")
+        for task_name, task in project.items():
+            print(f"--执行任务 {task_name}")
+            output_data_dict = self._execute_task(project_name, task, config)
+            print(f"==任务 {task_name} 执行完成==")
+        print(f"==项目 {project_name} 执行完成==")
+        return output_data_dict
     
     # 执行任务
     def _execute_task(self,project_name, task, config):
@@ -170,7 +161,9 @@ class ResourceModule:
         
         # 系统资源监控
         self.monitor_queue = queue.Queue()
-        clr.AddReference("bin/OpenHardwareMonitorLib")
+        
+        lib_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bin", "OpenHardwareMonitorLib")
+        clr.AddReference(lib_path)
         from OpenHardwareMonitor.Hardware import Computer 
         self.compute = Computer()
         self.compute.CPUEnabled = True

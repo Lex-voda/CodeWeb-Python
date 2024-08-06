@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
+import sys
 
 from ManagementEnd import ManagementEnd
+from utils import ThreadOutputStream
 
 app = Flask(__name__)
 cors = CORS(app, origins="*")
@@ -154,8 +156,17 @@ def handle_send_mission(data):
         emit('mission_response', {"error": "Request body shouldn't be empty"})
         return
     try:
-        message, response = manager.execute(data)
-        emit('mission_response', {"message": message, "data": response})
+        output_stream = ThreadOutputStream()
+        sys.stdout = output_stream
+        sys.stderr = output_stream
+        
+        response = manager.execute(data)
+        
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+        
+        emit('mission_response', {"message": None, "data": response})
+        
     except Exception as e:
         emit('mission_response', {"error": str(e)})
 

@@ -1,6 +1,6 @@
 {
     "database": {
-        "db_name":"cvweb",
+        "db_name":"codeweb",
         "db_user":"postgres",
         "db_password":"111111",
         "db_host":"localhost",
