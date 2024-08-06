@@ -433,7 +433,9 @@ components:
         message:
           type: string
         status:
-          type: string
+          type: object
+          additionalProperties:
+            type: boolean
     MissionRequest:
       type: object
       additionalProperties:
