@@ -613,14 +613,9 @@ components:
     ConfigurationRequest:
       type: object
       properties:
-        message:
-          type: string
         data:
           type: object
-          properties:
-            configuration:
-              type: object
-              additionalProperties: true
+          additionalProperties: true
     FileModificationRequest:
       type: object
       properties:
@@ -721,8 +716,6 @@ components:
     ProjectScene:
       type: object
       properties:
-        project_name:
-          type: string
         scene:
           type: object
           properties:
