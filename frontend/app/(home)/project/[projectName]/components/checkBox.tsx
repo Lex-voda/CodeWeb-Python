@@ -1,14 +1,5 @@
 "use client";
-import {
-  Modal,
-  ModalContent,
-  ModalBody,
-  Button,
-  ModalHeader,
-  Input,
-  ModalFooter,
-  Checkbox,
-} from "@nextui-org/react";
+import { Checkbox } from "@nextui-org/react";
 import { useState } from "react";
 
 export default function CheckBox({
@@ -25,7 +16,7 @@ export default function CheckBox({
         handleClick(v);
       }}
     >
-      需要输出：{isSelected ? "是" : "否"}
+      <span className="text-sm">需要输出：{isSelected ? "是" : "否"}</span>
     </Checkbox>
   );
 }

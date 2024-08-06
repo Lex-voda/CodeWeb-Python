@@ -167,16 +167,18 @@ export default function MissionBlock({
     >
       <div className="relative w-full h-6 flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <VscDebugStart
-            className="size-5 cursor-pointer"
-            onClick={() => {
-              if (currentMission === "") {
-                handleStartMission(missionIndex);
-              } else {
-                error("请先停止当前任务！");
-              }
-            }}
-          />
+          {currentMission !== mission.name && (
+            <VscDebugStart
+              className="size-5 cursor-pointer"
+              onClick={() => {
+                if (currentMission === "") {
+                  handleStartMission(missionIndex);
+                } else {
+                  error("请先停止当前任务！");
+                }
+              }}
+            />
+          )}
           {currentMission === mission.name && (
             <FaRegCircleStop
               className="size-5 cursor-pointer"
@@ -213,9 +215,7 @@ export default function MissionBlock({
                   onSelectParameterOpen();
                 }}
               >
-                <div
-                  className="flex items-center justify-center bg-gradient-to-tr from-[#91bef0] to-[violet] bg-clip-text text-transparent text-lg px-[6px] py-1 shadow-[0px_0px_2px_0.5px_rgba(0,0,0,0.2)] rounded-lg"
-                >
+                <div className="flex items-center justify-center bg-gradient-to-tr from-[#91bef0] to-[violet] bg-clip-text text-transparent text-lg px-[6px] py-1 shadow-[0px_0px_2px_0.5px_rgba(0,0,0,0.2)] rounded-lg">
                   ID: {strategy.ID}
                 </div>
                 <div

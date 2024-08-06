@@ -116,6 +116,31 @@ const deleteMission = async (project_name: string) =>
     { params: { project_name } }
   );
 
+interface getMonitorRes {
+  message: string;
+  data: {
+    CPU: {
+      load: string;
+      temperature: string;
+      power: string;
+    };
+    RAM: {
+      load: string;
+    };
+    GPU: {
+      load: string;
+      temperature: string;
+      power: string;
+    };
+    HDD: {
+      load: string;
+    };
+  };
+}
+
+const getMonitor = async () =>
+  await instance.get<any, AxiosResponse<Partial<getMonitorRes>>>(`/monitor`);
+
 const API = {
   getProjectList,
   getDirectory,
@@ -126,6 +151,7 @@ const API = {
   getFileContent,
   putFileContent,
   deleteMission,
+  getMonitor,
 };
 
 export default API;
