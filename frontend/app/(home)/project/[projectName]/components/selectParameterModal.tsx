@@ -63,7 +63,7 @@ export default function SelectParameterModal({
     });
     setArgs((prev) => {
       let newArgs = [...prev];
-      newArgs[index] = argusRange[e.target.value];
+      newArgs[index] = e.target.value === "default" ? null : e.target.value;
       return newArgs;
     });
   };
