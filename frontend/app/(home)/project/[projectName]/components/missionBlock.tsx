@@ -21,6 +21,8 @@ import { BiSolidEdit } from "react-icons/bi";
 import SelectParameterModal from "./selectParameterModal";
 import { ColorMapContext } from "../context/ColorMapContext";
 import ConfirmModal from "./confirmModal";
+import { FiImage } from "react-icons/fi";
+import Image from "next/image";
 
 export default function MissionBlock({
   missionIndex,
@@ -33,6 +35,7 @@ export default function MissionBlock({
   handleStartMission,
   handleStopMission,
   configTable,
+  missionResData,
 }: {
   missionIndex: number;
   mission: Mission;
@@ -44,6 +47,7 @@ export default function MissionBlock({
   handleStartMission: (index: number) => void;
   handleStopMission: (index: number) => void;
   configTable: any;
+  missionResData: any;
 }) {
   const { colorMap, updateColorMap, randomColors } =
     useContext(ColorMapContext);
@@ -177,11 +181,12 @@ export default function MissionBlock({
     let newMissionTable = [...missionTable];
     newMissionTable[missionIndex].STRATEGY_QUEUE = newMissionTable[
       missionIndex
-    ].STRATEGY_QUEUE.filter(
-      (strategy) => strategy.ID !== deleteStrategyID
-    );
+    ].STRATEGY_QUEUE.filter((strategy) => strategy.ID !== deleteStrategyID);
     setMissionTable(newMissionTable);
   };
+
+  const [showPicture, setShowPicture] = useState(false);
+  const [pictureBase64, setPictureBase64] = useState("");
 
   return (
     <div
@@ -242,7 +247,7 @@ export default function MissionBlock({
           return (
             <div className={`relative w-full h-fit `} key={index}>
               <div
-                className={`w-[70%] h-fit p-2 overflow-scroll no-scrollbar flex gap-2 items-center rounded-lg shadow-[0px_0px_2px_0.5px_rgba(0,0,0,0.2)] cursor-pointer `}
+                className={`relative w-[70%] h-fit p-2 overflow-scroll no-scrollbar flex gap-2 items-center rounded-lg shadow-[0px_0px_2px_0.5px_rgba(0,0,0,0.2)] cursor-pointer `}
                 onClick={() => {
                   setCurrentOpenStrategyName(strategy.FUNC);
                   setCurrentOpenStrategyID(strategy.ID);
@@ -287,6 +292,20 @@ export default function MissionBlock({
                     {arg}
                   </div>
                 ))}
+                {currentMission === mission.name &&
+                  missionResData &&
+                  missionResData[strategy.ID] && (
+                    <div
+                      className="absolute right-1 top-1 h-6 w-6 bg-[#00000044] rounded-md animate-pulse flex justify-center items-center cursor-pointer hover:bg-[#00000077]"
+                      onClick={(e) => {
+                        setShowPicture(true);
+                        setPictureBase64(missionResData[strategy.ID]);
+                        e.stopPropagation();
+                      }}
+                    >
+                      <FiImage />
+                    </div>
+                  )}
               </div>
               {/* select get output */}
               <div className="absolute right-0 top-0 h-full w-[25%] px-2 flex justify-center items-center rounded-lg bg-[#ffffff33]">
@@ -351,6 +370,22 @@ export default function MissionBlock({
         handleConfirm={handleDeleteStrategy}
         title={`确认删除策略${deleteStrategyID}?`}
       ></ConfirmModal>
+
+      {/* show pic */}
+      {showPicture && (
+        <div
+          className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-[#000000aa]"
+          onClick={() => setShowPicture(false)}
+        >
+          <Image
+            src={pictureBase64}
+            alt="pic"
+            className="max-w-[80%] max-h-[80%] object-contain"
+            height={600}
+            width={800}
+          />
+        </div>
+      )}
     </div>
   );
 }
