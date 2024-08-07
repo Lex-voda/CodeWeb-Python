@@ -343,31 +343,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /mission:
-    get:
-      tags:
-        - 任务管理
-      summary: 通过 WebSocket 连接获取任务状态
-      parameters:
-      - name: project_name
-        in: query
-        required: true
-        schema:
-            type: string
-      security:
-        - bearerAuth: ['read']
-      responses:
-        '200':
-          description: 成功获取任务状态
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MissionStatusResponse'
-        '500':
-          description: ErrorResponse
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
     post:
       tags:
         - 任务管理
@@ -672,11 +647,17 @@ components:
       type: object
       properties:
         message:
-          type: string
+          type: array
+          items:
+            type: string
         status:
           type: object
           additionalProperties:
             type: boolean
+        data:
+          type: object
+          additionalProperties:
+            type: object
     SystemStatusResponse:
       type: object
       properties:
