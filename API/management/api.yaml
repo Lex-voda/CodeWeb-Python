@@ -454,7 +454,7 @@ components:
         data:
           type: object
           additionalProperties:
-            type: object
+            type: string
     SystemStatusResponse:
       type: object
       properties:
