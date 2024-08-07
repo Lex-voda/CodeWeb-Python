@@ -187,11 +187,25 @@ export default function MainPage({ projectName }: { projectName: string }) {
     onOpenChange: onAddMissionOpenChange,
   } = useDisclosure();
 
+  const [missionResData, setMissionResData] = useState<any | null>(null);
   useEffect(() => {
     if (socket) {
       // 监听任务状态
-      socket.on("mission_status_response", (data) => {
-        if (data.message) setMessageList([...messageList, data.message]);
+      // socket.on("mission_status_response", (data) => {
+      //   if (data.message) setMessageList([...messageList, data.message]);
+      //   if (data.status)
+      //     for (let i = 0; i < Object.keys(data.status).length; i++) {
+      //       if (projectName === Object.keys(data.status)[i]) {
+      //         if (data.status[Object.keys(data.status)[i]] != true) {
+      //           setCurrentMission("");
+      //         }
+      //       }
+      //     }
+      // });
+
+      // 监听任务执行结果
+      socket.on("mission_response", (data) => {
+        if (data.message) setMessageList([...messageList, ...data.message]);
         if (data.status)
           for (let i = 0; i < Object.keys(data.status).length; i++) {
             if (projectName === Object.keys(data.status)[i]) {
@@ -200,13 +214,7 @@ export default function MainPage({ projectName }: { projectName: string }) {
               }
             }
           }
-      });
-
-      // 监听任务执行结果
-      socket.on("mission_response", (data) => {
-        if (data.message) setMessageList([...messageList, data.message]);
-        if (data.data) console.log(data.data);
-        // TODO: show pic with canvas
+        if (data.data) setMissionResData(data.data);
       });
 
       // 清理事件监听器
@@ -410,6 +418,7 @@ export default function MainPage({ projectName }: { projectName: string }) {
                     handleStartMission={handleStartMission}
                     handleStopMission={handleStopMission}
                     configTable={configTable}
+                    missionResData={missionResData}
                   />
                 ))}
                 {/* add mission */}

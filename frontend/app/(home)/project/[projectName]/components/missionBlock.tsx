@@ -10,7 +10,7 @@ import {
 import { Mission, StrategyContent } from "../../../../interfaces/project";
 import { VscDebugStart } from "react-icons/vsc";
 import { FaRegCircleStop } from "react-icons/fa6";
-import { MdExpandMore } from "react-icons/md";
+import { MdDeleteOutline, MdExpandMore } from "react-icons/md";
 import { IoAddSharp } from "react-icons/io5";
 import { useDisclosure } from "@nextui-org/react";
 import SelectStrategyModal from "./selectStrategyModal";
@@ -20,6 +20,9 @@ import SingleInputModal from "./singleInputModal";
 import { BiSolidEdit } from "react-icons/bi";
 import SelectParameterModal from "./selectParameterModal";
 import { ColorMapContext } from "../context/ColorMapContext";
+import ConfirmModal from "./confirmModal";
+import { FiImage } from "react-icons/fi";
+import Image from "next/image";
 
 export default function MissionBlock({
   missionIndex,
@@ -32,6 +35,7 @@ export default function MissionBlock({
   handleStartMission,
   handleStopMission,
   configTable,
+  missionResData,
 }: {
   missionIndex: number;
   mission: Mission;
@@ -43,6 +47,7 @@ export default function MissionBlock({
   handleStartMission: (index: number) => void;
   handleStopMission: (index: number) => void;
   configTable: any;
+  missionResData: any;
 }) {
   const { colorMap, updateColorMap, randomColors } =
     useContext(ColorMapContext);
@@ -148,12 +153,40 @@ export default function MissionBlock({
       if (value.endsWith("_OUTPUT")) return value.slice(0, -7);
     }
     for (let i = 0; i < Object.keys(configTable).length; i++) {
-      if (configTable[Object.keys(configTable)[i]] === value) {
+      if (Object.keys(configTable)[i] === value) {
         return Object.keys(configTable)[i];
       }
     }
     return "null";
   };
+
+  const {
+    isOpen: isDeleteMissionOpen,
+    onOpen: onDeleteMissionOpen,
+    onOpenChange: onDeleteMissionOpenChange,
+  } = useDisclosure();
+  const handleDeleteMission = () => {
+    let newMissionTable = [...missionTable];
+    newMissionTable.splice(missionIndex, 1);
+    setMissionTable(newMissionTable);
+  };
+
+  const {
+    isOpen: isDeleteStrategyOpen,
+    onOpen: onDeleteStrategyOpen,
+    onOpenChange: onDeleteStrategyOpenChange,
+  } = useDisclosure();
+  const [deleteStrategyID, setDeleteStrategyID] = useState<string>("");
+  const handleDeleteStrategy = () => {
+    let newMissionTable = [...missionTable];
+    newMissionTable[missionIndex].STRATEGY_QUEUE = newMissionTable[
+      missionIndex
+    ].STRATEGY_QUEUE.filter((strategy) => strategy.ID !== deleteStrategyID);
+    setMissionTable(newMissionTable);
+  };
+
+  const [showPicture, setShowPicture] = useState(false);
+  const [pictureBase64, setPictureBase64] = useState("");
 
   return (
     <div
@@ -194,6 +227,12 @@ export default function MissionBlock({
               onClick={onMissionNameOpen}
             />
           )}
+          <div
+            onClick={onDeleteMissionOpen}
+            className="w-5 h-5 flex justify-center items-center cursor-pointer rounded-md text-lg text-[#000]"
+          >
+            <MdDeleteOutline />
+          </div>
         </div>
         <div className="flex items-center">
           <MdExpandMore
@@ -208,13 +247,23 @@ export default function MissionBlock({
           return (
             <div className={`relative w-full h-fit `} key={index}>
               <div
-                className={`w-[70%] h-fit p-2 overflow-scroll no-scrollbar flex gap-2 items-center rounded-lg shadow-[0px_0px_2px_0.5px_rgba(0,0,0,0.2)] cursor-pointer `}
+                className={`relative w-[70%] h-fit p-2 overflow-scroll no-scrollbar flex gap-2 items-center rounded-lg shadow-[0px_0px_2px_0.5px_rgba(0,0,0,0.2)] cursor-pointer `}
                 onClick={() => {
                   setCurrentOpenStrategyName(strategy.FUNC);
                   setCurrentOpenStrategyID(strategy.ID);
                   onSelectParameterOpen();
                 }}
               >
+                <div
+                  onClick={(e) => {
+                    setDeleteStrategyID(strategy.ID);
+                    onDeleteStrategyOpen();
+                    e.stopPropagation();
+                  }}
+                  className="w-5 h-5 flex justify-center items-center hover:bg-[#33333333] cursor-pointer rounded-md text-lg text-[#000]"
+                >
+                  <MdDeleteOutline />
+                </div>
                 <div className="flex items-center justify-center bg-gradient-to-tr from-[#91bef0] to-[violet] bg-clip-text text-transparent text-lg px-[6px] py-1 shadow-[0px_0px_2px_0.5px_rgba(0,0,0,0.2)] rounded-lg">
                   ID: {strategy.ID}
                 </div>
@@ -243,6 +292,20 @@ export default function MissionBlock({
                     {arg}
                   </div>
                 ))}
+                {currentMission === mission.name &&
+                  missionResData &&
+                  missionResData[strategy.ID] && (
+                    <div
+                      className="absolute right-1 top-1 h-6 w-6 bg-[#00000044] rounded-md animate-pulse flex justify-center items-center cursor-pointer hover:bg-[#00000077]"
+                      onClick={(e) => {
+                        setShowPicture(true);
+                        setPictureBase64(missionResData[strategy.ID]);
+                        e.stopPropagation();
+                      }}
+                    >
+                      <FiImage />
+                    </div>
+                  )}
               </div>
               {/* select get output */}
               <div className="absolute right-0 top-0 h-full w-[25%] px-2 flex justify-center items-center rounded-lg bg-[#ffffff33]">
@@ -290,6 +353,38 @@ export default function MissionBlock({
           currentOpenStrategyID={currentOpenStrategyID}
           configTable={configTable}
         ></SelectParameterModal>
+      )}
+
+      {/* delete mission modal */}
+      <ConfirmModal
+        isOpen={isDeleteMissionOpen}
+        onOpenChange={onDeleteMissionOpenChange}
+        handleConfirm={handleDeleteMission}
+        title={`确认删除任务${mission.name}?`}
+      ></ConfirmModal>
+
+      {/* delete strategy modal */}
+      <ConfirmModal
+        isOpen={isDeleteStrategyOpen}
+        onOpenChange={onDeleteStrategyOpenChange}
+        handleConfirm={handleDeleteStrategy}
+        title={`确认删除策略${deleteStrategyID}?`}
+      ></ConfirmModal>
+
+      {/* show pic */}
+      {showPicture && (
+        <div
+          className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-[#000000aa]"
+          onClick={() => setShowPicture(false)}
+        >
+          <Image
+            src={pictureBase64}
+            alt="pic"
+            className="max-w-[80%] max-h-[80%] object-contain"
+            height={600}
+            width={800}
+          />
+        </div>
       )}
     </div>
   );

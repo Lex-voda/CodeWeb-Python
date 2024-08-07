@@ -145,13 +145,13 @@ export default function NavBar({
                 </div>
                 <div className="flex flex-col justify-center gap-[2px]">
                   {systemInfo.CPU.load && (
-                    <div>利用率: {systemInfo.CPU.load}</div>
+                    <div>利用率: {systemInfo.CPU.load}%</div>
                   )}
                   {systemInfo.CPU.temperature && (
-                    <div>温度: {systemInfo.CPU.temperature}</div>
+                    <div>温度: {systemInfo.CPU.temperature}°C</div>
                   )}
                   {systemInfo.CPU.power && (
-                    <div>功耗: {systemInfo.CPU.power}</div>
+                    <div>功耗: {systemInfo.CPU.power}W</div>
                   )}
                 </div>
               </div>
@@ -161,7 +161,7 @@ export default function NavBar({
                 </div>
                 <div className="flex flex-col justify-center gap-[2px]">
                   {systemInfo.RAM.load && (
-                    <div>利用率: {systemInfo.RAM.load}</div>
+                    <div>利用率: {systemInfo.RAM.load}%</div>
                   )}
                 </div>
               </div>
@@ -171,13 +171,13 @@ export default function NavBar({
                 </div>
                 <div className="flex flex-col justify-center gap-[2px]">
                   {systemInfo.GPU.load && (
-                    <div>利用率: {systemInfo.GPU.load}</div>
+                    <div>利用率: {systemInfo.GPU.load}%</div>
                   )}
                   {systemInfo.GPU.temperature && (
-                    <div>温度: {systemInfo.GPU.temperature}</div>
+                    <div>温度: {systemInfo.GPU.temperature}°C</div>
                   )}
                   {systemInfo.GPU.power && (
-                    <div>功耗: {systemInfo.GPU.power}</div>
+                    <div>功耗: {systemInfo.GPU.power}W</div>
                   )}
                 </div>
               </div>
@@ -187,7 +187,7 @@ export default function NavBar({
                 </div>
                 <div className="flex flex-col justify-center gap-[2px]">
                   {systemInfo.HDD.load && (
-                    <div>利用率: {systemInfo.HDD.load}</div>
+                    <div>利用率: {systemInfo.HDD.load}%</div>
                   )}
                 </div>
               </div>
