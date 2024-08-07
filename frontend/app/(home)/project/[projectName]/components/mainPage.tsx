@@ -206,14 +206,19 @@ export default function MainPage({ projectName }: { projectName: string }) {
       // 监听任务执行结果
       socket.on("mission_response", (data) => {
         if (data.message) setMessageList([...messageList, ...data.message]);
-        if (data.status)
-          for (let i = 0; i < Object.keys(data.status).length; i++) {
-            if (projectName === Object.keys(data.status)[i]) {
-              if (data.status[Object.keys(data.status)[i]] != true) {
-                setCurrentMission("");
-              }
-            }
+        // if (data.status)
+        //   for (let i = 0; i < Object.keys(data.status).length; i++) {
+        //     if (projectName === Object.keys(data.status)[i]) {
+        //       if (data.status[Object.keys(data.status)[i]] != true) {
+        //         setCurrentMission("");
+        //       }
+        //     }
+        //   }
+        if (typeof data.status === "boolean") {
+          if (data.status === false) {
+            setCurrentMission("");
           }
+        }
         if (data.data) setMissionResData(data.data);
       });
 
