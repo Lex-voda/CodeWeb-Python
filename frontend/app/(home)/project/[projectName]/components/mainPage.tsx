@@ -187,6 +187,7 @@ export default function MainPage({ projectName }: { projectName: string }) {
     onOpenChange: onAddMissionOpenChange,
   } = useDisclosure();
 
+  const [missionResData, setMissionResData] = useState<any | null>(null);
   useEffect(() => {
     if (socket) {
       // 监听任务状态
@@ -213,8 +214,7 @@ export default function MainPage({ projectName }: { projectName: string }) {
               }
             }
           }
-        if (data.data) console.log(data.data);
-        // TODO: show pic with canvas
+        if (data.data) setMissionResData(data.data);
       });
 
       // 清理事件监听器
@@ -418,6 +418,7 @@ export default function MainPage({ projectName }: { projectName: string }) {
                     handleStartMission={handleStartMission}
                     handleStopMission={handleStopMission}
                     configTable={configTable}
+                    missionResData={missionResData}
                   />
                 ))}
                 {/* add mission */}
