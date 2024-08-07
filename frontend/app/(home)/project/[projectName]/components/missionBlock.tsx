@@ -10,7 +10,7 @@ import {
 import { Mission, StrategyContent } from "../../../../interfaces/project";
 import { VscDebugStart } from "react-icons/vsc";
 import { FaRegCircleStop } from "react-icons/fa6";
-import { MdExpandMore } from "react-icons/md";
+import { MdDeleteOutline, MdExpandMore } from "react-icons/md";
 import { IoAddSharp } from "react-icons/io5";
 import { useDisclosure } from "@nextui-org/react";
 import SelectStrategyModal from "./selectStrategyModal";
@@ -20,6 +20,7 @@ import SingleInputModal from "./singleInputModal";
 import { BiSolidEdit } from "react-icons/bi";
 import SelectParameterModal from "./selectParameterModal";
 import { ColorMapContext } from "../context/ColorMapContext";
+import ConfirmModal from "./confirmModal";
 
 export default function MissionBlock({
   missionIndex,
@@ -148,11 +149,38 @@ export default function MissionBlock({
       if (value.endsWith("_OUTPUT")) return value.slice(0, -7);
     }
     for (let i = 0; i < Object.keys(configTable).length; i++) {
-      if (configTable[Object.keys(configTable)[i]] === value) {
+      if (Object.keys(configTable)[i] === value) {
         return Object.keys(configTable)[i];
       }
     }
     return "null";
+  };
+
+  const {
+    isOpen: isDeleteMissionOpen,
+    onOpen: onDeleteMissionOpen,
+    onOpenChange: onDeleteMissionOpenChange,
+  } = useDisclosure();
+  const handleDeleteMission = () => {
+    let newMissionTable = [...missionTable];
+    newMissionTable.splice(missionIndex, 1);
+    setMissionTable(newMissionTable);
+  };
+
+  const {
+    isOpen: isDeleteStrategyOpen,
+    onOpen: onDeleteStrategyOpen,
+    onOpenChange: onDeleteStrategyOpenChange,
+  } = useDisclosure();
+  const [deleteStrategyID, setDeleteStrategyID] = useState<string>("");
+  const handleDeleteStrategy = () => {
+    let newMissionTable = [...missionTable];
+    newMissionTable[missionIndex].STRATEGY_QUEUE = newMissionTable[
+      missionIndex
+    ].STRATEGY_QUEUE.filter(
+      (strategy) => strategy.ID !== deleteStrategyID
+    );
+    setMissionTable(newMissionTable);
   };
 
   return (
@@ -194,6 +222,12 @@ export default function MissionBlock({
               onClick={onMissionNameOpen}
             />
           )}
+          <div
+            onClick={onDeleteMissionOpen}
+            className="w-5 h-5 flex justify-center items-center cursor-pointer rounded-md text-lg text-[#000]"
+          >
+            <MdDeleteOutline />
+          </div>
         </div>
         <div className="flex items-center">
           <MdExpandMore
@@ -215,6 +249,16 @@ export default function MissionBlock({
                   onSelectParameterOpen();
                 }}
               >
+                <div
+                  onClick={(e) => {
+                    setDeleteStrategyID(strategy.ID);
+                    onDeleteStrategyOpen();
+                    e.stopPropagation();
+                  }}
+                  className="w-5 h-5 flex justify-center items-center hover:bg-[#33333333] cursor-pointer rounded-md text-lg text-[#000]"
+                >
+                  <MdDeleteOutline />
+                </div>
                 <div className="flex items-center justify-center bg-gradient-to-tr from-[#91bef0] to-[violet] bg-clip-text text-transparent text-lg px-[6px] py-1 shadow-[0px_0px_2px_0.5px_rgba(0,0,0,0.2)] rounded-lg">
                   ID: {strategy.ID}
                 </div>
@@ -291,6 +335,22 @@ export default function MissionBlock({
           configTable={configTable}
         ></SelectParameterModal>
       )}
+
+      {/* delete mission modal */}
+      <ConfirmModal
+        isOpen={isDeleteMissionOpen}
+        onOpenChange={onDeleteMissionOpenChange}
+        handleConfirm={handleDeleteMission}
+        title={`确认删除任务${mission.name}?`}
+      ></ConfirmModal>
+
+      {/* delete strategy modal */}
+      <ConfirmModal
+        isOpen={isDeleteStrategyOpen}
+        onOpenChange={onDeleteStrategyOpenChange}
+        handleConfirm={handleDeleteStrategy}
+        title={`确认删除策略${deleteStrategyID}?`}
+      ></ConfirmModal>
     </div>
   );
 }
