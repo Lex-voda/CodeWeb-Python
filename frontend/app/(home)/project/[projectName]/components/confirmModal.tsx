@@ -10,7 +10,7 @@ import {
 } from "@nextui-org/react";
 import { useState } from "react";
 
-export default function SingleInputModal({
+export default function ConfirmModal({
   isOpen,
   onOpenChange,
   title,
@@ -19,29 +19,14 @@ export default function SingleInputModal({
   isOpen: boolean;
   onOpenChange: () => void;
   title: string;
-  handleConfirm: (v: string) => void;
+  handleConfirm: () => void;
 }) {
-  const [value, setValue] = useState<string>("");
   return (
-    <Modal
-      isOpen={isOpen}
-      onOpenChange={onOpenChange}
-      placement="center"
-      onClose={() => setValue("")}
-    >
+    <Modal isOpen={isOpen} onOpenChange={onOpenChange} placement="center">
       <ModalContent>
         {(onClose) => (
           <>
             <ModalHeader className="flex flex-col gap-1">{title}</ModalHeader>
-            <ModalBody>
-              <Input
-                autoFocus
-                label="value"
-                variant="bordered"
-                value={value}
-                onValueChange={setValue}
-              />
-            </ModalBody>
             <ModalFooter>
               <Button color="danger" variant="flat" onPress={onClose}>
                 取消
@@ -49,7 +34,7 @@ export default function SingleInputModal({
               <Button
                 color="primary"
                 onPress={() => {
-                  handleConfirm(value);
+                  handleConfirm();
                   onClose();
                 }}
               >

@@ -1,6 +1,10 @@
 import { type AxiosResponse } from "axios";
 import instance from "./request";
 
+interface commonRes {
+  message: string;
+}
+
 interface DirectoryRes {
   message: string;
   data: {
@@ -39,12 +43,8 @@ interface postConfigReq {
   file_path: string;
 }
 
-interface postConfigRes {
-  message: string;
-}
-
 const postConfig = async (file_path: string, project_name: string) =>
-  await instance.post<postConfigReq, AxiosResponse<Partial<postConfigRes>>>(
+  await instance.post<postConfigReq, AxiosResponse<Partial<commonRes>>>(
     `/file/config`,
     { file_path },
     { params: { project_name } }
@@ -69,12 +69,8 @@ interface putConfigReq {
   data: any;
 }
 
-interface putConfigRes {
-  message: string;
-}
-
 const putConfig = async (project_name: string, content: any) =>
-  await instance.put<putConfigReq, AxiosResponse<Partial<putConfigRes>>>(
+  await instance.put<putConfigReq, AxiosResponse<Partial<commonRes>>>(
     `/file/config`,
     { data: content },
     { params: { project_name } }
@@ -96,25 +92,17 @@ interface putFileContentReq {
   content: string;
 }
 
-interface putFileContentRes {
-  message: string;
-}
-
 const putFileContent = async (project_name: string, content: string) =>
-  await instance.put<
-    putFileContentReq,
-    AxiosResponse<Partial<putFileContentRes>>
-  >(`/file`, { content }, { params: { project_name } });
-
-interface deleteMissionRes {
-  message: string;
-}
-
-const deleteMission = async (project_name: string) =>
-  await instance.delete<any, AxiosResponse<Partial<deleteMissionRes>>>(
-    `/mission`,
+  await instance.put<putFileContentReq, AxiosResponse<Partial<commonRes>>>(
+    `/file`,
+    { content },
     { params: { project_name } }
   );
+
+const deleteMission = async (project_name: string) =>
+  await instance.delete<any, AxiosResponse<Partial<commonRes>>>(`/mission`, {
+    params: { project_name },
+  });
 
 interface getMonitorRes {
   message: string;
@@ -141,6 +129,23 @@ interface getMonitorRes {
 const getMonitor = async () =>
   await instance.get<any, AxiosResponse<Partial<getMonitorRes>>>(`/monitor`);
 
+const postFile = async (file_path: string) =>
+  await instance.post<null, AxiosResponse<Partial<commonRes>>>(`/file`, null, {
+    params: { file_path },
+  });
+
+const patchFile = async (file_path: string, newName: string) =>
+  await instance.patch<string, AxiosResponse<Partial<commonRes>>>(
+    `/file`,
+    newName,
+    { params: { file_path } }
+  );
+
+const deleteFile = async (file_path: string) =>
+  await instance.delete<any, AxiosResponse<Partial<commonRes>>>(`/file`, {
+    params: { file_path },
+  });
+
 const API = {
   getProjectList,
   getDirectory,
@@ -152,6 +157,9 @@ const API = {
   putFileContent,
   deleteMission,
   getMonitor,
+  postFile,
+  patchFile,
+  deleteFile,
 };
 
 export default API;

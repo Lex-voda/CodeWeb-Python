@@ -3,8 +3,8 @@ import { testStrategy } from "@/app/constants/testStrategy";
 import { Mission, StrategyContent } from "@/app/interfaces/project";
 import API from "@/app/utils/api";
 import { useContext, useEffect, useState } from "react";
-import { FaChevronLeft, FaChevronRight, FaRegFile } from "react-icons/fa";
-import { FiLogOut } from "react-icons/fi";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { GoFileDirectory } from "react-icons/go";
 import StrategyModal from "./strategyModal";
 import { useDisclosure } from "@nextui-org/react";
 import ConfigModal from "./configModal";
@@ -313,8 +313,8 @@ export default function MainPage({ projectName }: { projectName: string }) {
             className="w-full flex gap-2 items-center cursor-pointer p-2 bg-[#33333322] hover:bg-[#33333377] transition-background rounded-lg"
             onClick={onCheckFileOpen}
           >
-            <FaRegFile />
-            <span>查看文件</span>
+            <GoFileDirectory />
+            <span>文件管理</span>
           </div>
         </div>
         {/* bottom part */}
@@ -447,6 +447,7 @@ export default function MainPage({ projectName }: { projectName: string }) {
         isOpen={isStrategyOpen}
         onOpenChange={onStrategyOpenChange}
         content={strategyTable}
+        getStrategyTable={getStrategyTable}
       />
 
       {/* modify config item modal */}
