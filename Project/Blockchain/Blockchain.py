@@ -2,20 +2,25 @@ import pandas as pd
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
 from scipy.stats import percentileofscore
 import os
 import base64
 from io import BytesIO
 
-from utils import draw_2node_graph
+from Blockchain.utils import draw_2node_graph
 
 from CodeWeb_Python.api import StrategyModule as strategy
 
 @strategy.register(name="Load_Data", comment="Load data from CSV files")
 def Load_Data(file_path):
     # LOAD DATACreate dataframes from CSV files
+    script_dir = os.path.dirname(__file__)
+    file_path = os.path.join(script_dir, file_path)
+    files_list = None
     for (root,dirs,files) in os.walk(
-        './data/miner_volume', topdown=True):
+        file_path, topdown=True):
         files_list=files
         root_dir=root
     file_path_list=[root_dir+'/'+file for file in files_list]
@@ -26,10 +31,10 @@ def Load_Data(file_path):
     for df in miner_summaries: # Edit miners with null blocks
         df.loc[df['block'].isnull(),'block']=1
     # Final list with miner summary dataframes
-    print(miner_summaries[5].head())
+    # print(miner_summaries[5].head()[1])
     return miner_summaries
 
-@strategy.register(name="ME_miners_and_transactions", comment="Plot miner evolution with miners and transactions")
+@strategy.register(name="ME_1", comment="Plot miner evolution with miners and transactions")
 def Miner_Evolution_1(miner_summaries):
     # Create series with number of miners and transactions
     no_miners=[len(miner_summary) for miner_summary in miner_summaries]

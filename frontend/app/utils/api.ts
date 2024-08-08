@@ -1,6 +1,10 @@
 import { type AxiosResponse } from "axios";
 import instance from "./request";
 
+interface commonRes {
+  message: string;
+}
+
 interface DirectoryRes {
   message: string;
   data: {
@@ -8,8 +12,10 @@ interface DirectoryRes {
   };
 }
 
-const getDirectory = async () =>
-  await instance.get<any, AxiosResponse<DirectoryRes>>("/sync/file/directory");
+const getDirectory = async (project_name: string) =>
+  await instance.get<any, AxiosResponse<DirectoryRes>>("/file/directory", {
+    params: { project_name: project_name },
+  });
 
 interface ProjectListRes {
   message: string;
@@ -17,10 +23,9 @@ interface ProjectListRes {
     project_list: [string];
   };
 }
+
 const getProjectList = async () =>
-  await instance.get<any, AxiosResponse<ProjectListRes>>(
-    "/sync/file/project-list"
-  );
+  await instance.get<any, AxiosResponse<ProjectListRes>>("/file/project-list");
 
 interface strategyRes {
   message: string;
@@ -30,23 +35,19 @@ interface strategyRes {
 }
 
 const getStrategy = async (project_name: string) =>
-  await instance.get<any, AxiosResponse<strategyRes>>("/sync/file/strategy", {
+  await instance.get<any, AxiosResponse<strategyRes>>("/file/strategy", {
     params: { project_name: project_name },
   });
 
 interface postConfigReq {
   file_path: string;
-  project_name: string;
 }
 
-interface postConfigRes {
-  message: string;
-}
-
-const postConfig = async (data: Partial<postConfigReq>) =>
-  await instance.post<postConfigReq, AxiosResponse<Partial<postConfigRes>>>(
+const postConfig = async (file_path: string, project_name: string) =>
+  await instance.post<postConfigReq, AxiosResponse<Partial<commonRes>>>(
     `/file/config`,
-    data
+    { file_path },
+    { params: { project_name } }
   );
 
 interface getConfigRes {
@@ -65,19 +66,85 @@ const getConfig = async (project_name: string) =>
   );
 
 interface putConfigReq {
-  project_name: string;
-  content: any;
+  data: any;
 }
 
-interface putConfigRes {
-  message: string;
-}
-
-const putConfig = async (data: Partial<putConfigReq>) =>
-  await instance.put<putConfigReq, AxiosResponse<Partial<putConfigRes>>>(
+const putConfig = async (project_name: string, content: any) =>
+  await instance.put<putConfigReq, AxiosResponse<Partial<commonRes>>>(
     `/file/config`,
-    data
+    { data: content },
+    { params: { project_name } }
   );
+
+interface getFileContentRes {
+  message: string;
+  data: {
+    content: string;
+  };
+}
+
+const getFileContent = async (file_path: string) =>
+  await instance.get<any, AxiosResponse<Partial<getFileContentRes>>>(`/file`, {
+    params: { file_path },
+  });
+
+interface putFileContentReq {
+  content: string;
+}
+
+const putFileContent = async (project_name: string, content: string) =>
+  await instance.put<putFileContentReq, AxiosResponse<Partial<commonRes>>>(
+    `/file`,
+    { content },
+    { params: { project_name } }
+  );
+
+const deleteMission = async (project_name: string) =>
+  await instance.delete<any, AxiosResponse<Partial<commonRes>>>(`/mission`, {
+    params: { project_name },
+  });
+
+interface getMonitorRes {
+  message: string;
+  data: {
+    CPU: {
+      load: string;
+      temperature: string;
+      power: string;
+    };
+    RAM: {
+      load: string;
+    };
+    GPU: {
+      load: string;
+      temperature: string;
+      power: string;
+    };
+    HDD: {
+      load: string;
+    };
+  };
+}
+
+const getMonitor = async () =>
+  await instance.get<any, AxiosResponse<Partial<getMonitorRes>>>(`/monitor`);
+
+const postFile = async (file_path: string) =>
+  await instance.post<null, AxiosResponse<Partial<commonRes>>>(`/file`, null, {
+    params: { file_path },
+  });
+
+const patchFile = async (file_path: string, newName: string) =>
+  await instance.patch<string, AxiosResponse<Partial<commonRes>>>(
+    `/file`,
+    newName,
+    { params: { file_path } }
+  );
+
+const deleteFile = async (file_path: string) =>
+  await instance.delete<any, AxiosResponse<Partial<commonRes>>>(`/file`, {
+    params: { file_path },
+  });
 
 const API = {
   getProjectList,
@@ -86,6 +153,13 @@ const API = {
   postConfig,
   getConfig,
   putConfig,
+  getFileContent,
+  putFileContent,
+  deleteMission,
+  getMonitor,
+  postFile,
+  patchFile,
+  deleteFile,
 };
 
 export default API;

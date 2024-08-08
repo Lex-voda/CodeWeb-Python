@@ -57,6 +57,7 @@ export default function ConfigModal({
       onClose={() => {
         setCurrentPath(rootPath);
         setCurrentDir(RootDir);
+        setCurrentSelectedFile("");
       }}
       onClick={(e) => {
         e.stopPropagation();

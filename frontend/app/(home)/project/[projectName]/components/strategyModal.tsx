@@ -8,15 +8,18 @@ import {
   TableRow,
   TableCell,
 } from "@nextui-org/react";
+import { IoMdRefresh } from "react-icons/io";
 
 export default function StrategyModal({
   isOpen,
   onOpenChange,
   content,
+  getStrategyTable,
 }: {
   isOpen: boolean;
   onOpenChange: () => void;
   content: any;
+  getStrategyTable: () => void;
 }) {
   return (
     <Modal
@@ -43,6 +46,12 @@ export default function StrategyModal({
           <>
             <ModalBody className="w-full h-full relative left-0 top-0">
               <div className="w-full h-full absolute top-0 left-0 z-[1] p-6 overflow-scroll no-scrollbar flex flex-col gap-3 ">
+                <div
+                  className="bg-[#00000015] hover:bg-[#00000040] -mt-2 cursor-pointer w-8 min-h-8 rounded-full text-lg flex justify-center items-center"
+                  onClick={getStrategyTable}
+                >
+                  <IoMdRefresh />
+                </div>
                 {Object.keys(content).map((strategyName, index) => (
                   <Table aria-label="strategy table" key={index}>
                     <TableHeader>
@@ -69,10 +78,16 @@ export default function StrategyModal({
                                   <TableRow key={argu["argu_name"]}>
                                     <TableCell>{argu["argu_name"]}</TableCell>
                                     <TableCell>
-                                      {argu["argu_annotation"]}
+                                      {argu["argu_annotation"].split("'")[1] ===
+                                      "inspect._empty"
+                                        ? "None"
+                                        : argu["argu_annotation"].split("'")[1]}
                                     </TableCell>
                                     <TableCell>
-                                      {argu["argu_default"]}
+                                      {argu["argu_default"].split("'")[1] ===
+                                      "inspect._empty"
+                                        ? "None"
+                                        : argu["argu_default"].split("'")[1]}
                                     </TableCell>
                                   </TableRow>
                                 );
@@ -81,11 +96,13 @@ export default function StrategyModal({
                           </Table>
                         </TableCell>
                         <TableCell>
-                          {
-                            content[Object.keys(content)[index]][
-                              "return_annotation"
-                            ]
-                          }
+                          {content[Object.keys(content)[index]][
+                            "return_annotation"
+                          ].split("'")[1] === "inspect._empty"
+                            ? "None"
+                            : content[Object.keys(content)[index]][
+                                "return_annotation"
+                              ].split("'")[1]}
                         </TableCell>
                         <TableCell>
                           {content[Object.keys(content)[index]]["comment"]}

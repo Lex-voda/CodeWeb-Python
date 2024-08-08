@@ -127,7 +127,6 @@ class StrategyModule:
                         kwargs[args_name] = config[args_value]
                 print(f'--执行策略 {id}，策略函数为 {func_name}，参数配置为 {strategy["ARGS"]}，参数为 {kwargs}')
                 pre_output[id] = self.__execute_strategy(project_name, func_name, **kwargs)
-                print(f"==执行结果为 {pre_output[id]}")
                 
         return {strategy_id: pre_output.get(strategy_id) for strategy_id in task['GET_OUTPUT']}
 

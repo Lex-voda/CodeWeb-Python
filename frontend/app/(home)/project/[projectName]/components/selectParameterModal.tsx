@@ -50,7 +50,7 @@ export default function SelectParameterModal({
 
   const argusRange: any = { ...configTable, ...{ default: null } };
   for (let i = 0; i < Number(currentOpenStrategyID.split("_")[1]); i++) {
-    argusRange[`RMT_${i}_OUTPUT`] = `RMT_${i}_OUTPUT`;
+    argusRange[`Func_${i}_OUTPUT`] = `Func_${i}_OUTPUT`;
   }
 
   const [selectedKeys, setSelectedKeys] = useState<Array<string>>([]);
@@ -63,7 +63,7 @@ export default function SelectParameterModal({
     });
     setArgs((prev) => {
       let newArgs = [...prev];
-      newArgs[index] = argusRange[e.target.value];
+      newArgs[index] = e.target.value === "default" ? null : e.target.value;
       return newArgs;
     });
   };
@@ -78,6 +78,7 @@ export default function SelectParameterModal({
         setArgs([]);
       }}
       className="max-h-[80vh] overflow-scroll no-scrollbar"
+      size="xl"
     >
       <ModalContent>
         {(onClose) => (
@@ -85,26 +86,69 @@ export default function SelectParameterModal({
             <ModalHeader className="flex flex-col gap-1">选择参数</ModalHeader>
             <ModalBody>
               <p>策略详情：</p>
-              <Table aria-label="Example static collection table">
+
+              <Table aria-label="strategy table">
                 <TableHeader>
-                  <TableColumn>Argu Name</TableColumn>
-                  <TableColumn>Argu Annotation</TableColumn>
-                  <TableColumn>Argu Default</TableColumn>
+                  <TableColumn>Strategy Name</TableColumn>
+                  <TableColumn>Argus</TableColumn>
+                  <TableColumn>Return Annotation</TableColumn>
+                  <TableColumn>Comment</TableColumn>
                 </TableHeader>
                 <TableBody>
-                  {strategyContents[
-                    strategyNames.indexOf(currentOpenStrategyName)
-                  ].argus.map((argu: any) => {
-                    return (
-                      <TableRow key={argu["argu_name"]}>
-                        <TableCell>{argu["argu_name"]}</TableCell>
-                        <TableCell>{argu["argu_annotation"]}</TableCell>
-                        <TableCell>{argu["argu_default"]}</TableCell>
-                      </TableRow>
-                    );
-                  })}
+                  <TableRow key="1">
+                    <TableCell>{currentOpenStrategyName}</TableCell>
+                    <TableCell>
+                      <Table aria-label="Example static collection table">
+                        <TableHeader>
+                          <TableColumn>Argu Name</TableColumn>
+                          <TableColumn>Argu Annotation</TableColumn>
+                          <TableColumn>Argu Default</TableColumn>
+                        </TableHeader>
+                        <TableBody>
+                          {strategyContents[
+                            strategyNames.indexOf(currentOpenStrategyName)
+                          ]["argus"].map((argu: any) => {
+                            return (
+                              <TableRow key={argu["argu_name"]}>
+                                <TableCell>{argu["argu_name"]}</TableCell>
+                                <TableCell>
+                                  {argu["argu_annotation"].split("'")[1] ===
+                                  "inspect._empty"
+                                    ? "None"
+                                    : argu["argu_annotation"].split("'")[1]}
+                                </TableCell>
+                                <TableCell>
+                                  {argu["argu_default"].split("'")[1] ===
+                                  "inspect._empty"
+                                    ? "None"
+                                    : argu["argu_default"].split("'")[1]}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </TableCell>
+                    <TableCell>
+                      {strategyContents[
+                        strategyNames.indexOf(currentOpenStrategyName)
+                      ]["return_annotation"].split("'")[1] === "inspect._empty"
+                        ? "None"
+                        : strategyContents[
+                            strategyNames.indexOf(currentOpenStrategyName)
+                          ]["return_annotation"].split("'")[1]}
+                    </TableCell>
+                    <TableCell>
+                      {
+                        strategyContents[
+                          strategyNames.indexOf(currentOpenStrategyName)
+                        ]["comment"]
+                      }
+                    </TableCell>
+                  </TableRow>
                 </TableBody>
               </Table>
+
               <p>配置表详情</p>
               <Table
                 aria-label="Example static collection table"
@@ -139,8 +183,13 @@ export default function SelectParameterModal({
               {strategyContents[
                 strategyNames.indexOf(currentOpenStrategyName)
               ].argus.map((argu: any, index) => (
-                <div key={index} className="flex gap-2 items-center justify-between">
-                  <p className="w-[15%] flex justify-center items-center">{argu["argu_name"]}: </p>
+                <div
+                  key={index}
+                  className="flex gap-2 items-center justify-between"
+                >
+                  <p className="w-[15%] flex justify-center items-center">
+                    {argu["argu_name"]}:{" "}
+                  </p>
                   <Select
                     label="选择参数值"
                     variant="bordered"
