@@ -1,18 +1,18 @@
-import io
-import threading
+import queue
 
-# 自定义输出流类
-class ThreadOutputStream(io.StringIO):
-    def __init__(self, emit):
-        super().__init__()
-        self.lock = threading.Lock()
-        self.emit = emit
+class CustomOutputStream:
+    def __init__(self):
+        self._buffer = queue.Queue()
 
-    def write(self, s):
-        with self.lock:
-            super().write(s)
-            self.emit_func('mission_response', {'message': s, 'data': None})
+    def write(self, message):
+        self._buffer.put(message)
 
-    def getvalue(self):
-        with self.lock:
-            return super().getvalue()
+    def flush(self):
+        pass  # 标准输出流的 flush 方法通常不需要做任何事情
+
+    def get_value(self):
+        return [self._buffer.get() for _ in range(self._buffer.qsize())]
+
+    def clear(self):
+        while not self._buffer.empty():
+            self._buffer.get()

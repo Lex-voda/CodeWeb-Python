@@ -4,11 +4,11 @@ from flask_socketio import SocketIO, emit
 import sys
 
 from ManagementEnd import ManagementEnd
-from utils import ThreadOutputStream
+from utils import CustomOutputStream
 
 app = Flask(__name__)
 cors = CORS(app, origins="*")
-socketio = SocketIO(app, async_mode='eventlet')
+socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
 
 manager = ManagementEnd()
 
@@ -31,7 +31,8 @@ def get_directory_tree():
     if not project_name:
         return jsonify({"error": "Project name is required"}), 400
     try:
-        directory_tree = manager.get_directory_tree()
+        directory_tree = manager.get_directory_tree(project_name)
+        print(directory_tree)
         return jsonify({"message": "同步成功", "data": {"file_directory": directory_tree}}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 501
@@ -101,6 +102,7 @@ def modify_file():
 @app.route('/file', methods=['GET'])
 def view_file_content():
     file_path = request.args.get('file_path')
+    print(file_path)
     if not file_path:
         return jsonify({"error": "File path is required"}), 400
     try:
@@ -136,49 +138,38 @@ def delete_file():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# 获取任务状态信息
-@socketio.on('get_mission_status')
-def handle_get_mission_status(data):
-    project_name = data.get('project_name')
-    if not project_name:
-        emit('mission_status_response', {"error": "Project name is required"})
-        return
-    try:
-        mission_status = manager.get_task_status(project_name)
-        emit('mission_status_response', {"message": "Get mission status successfully", "status": mission_status})
-    except Exception as e:
-        emit('mission_status_response', {"error": str(e)})
-
 # 执行任务
 @socketio.on('send_mission')
 def handle_send_mission(data):
+    print(data)
+    
     if not data:
         emit('mission_response', {"error": "Request body shouldn't be empty"})
         return
+    
     try:
-        output_stream = ThreadOutputStream()
-        sys.stdout = output_stream
-        sys.stderr = output_stream
+        custom_output = CustomOutputStream()
+        sys.stdout = custom_output
         
         response = manager.execute(data)
         
         sys.stdout = sys.__stdout__
-        sys.stderr = sys.__stderr__
-        
-        emit('mission_response', {"message": None, "data": response})
+        print("任务执行完成")
+        emit('mission_response', {"message": custom_output.get_value(), "data": response,"status":False})
         
     except Exception as e:
         emit('mission_response', {"error": str(e)})
-
+        
 
 # 停止或删除任务
 @app.route('/mission', methods=['DELETE'])
 def delete_mission():
-    mission_name = request.args.get('mission_name')
-    if not mission_name:
-        return jsonify({"error": "Mission name is required"}), 400
+    print(request.args)
+    project_name = request.args.get('project_name')
+    if not project_name:
+        return jsonify({"error": "Project name is required"}), 400
     try:
-        manager.remove_thread(mission_name)
+        manager.remove_thread(project_name)
         return jsonify({"message": "Delete mission successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -188,6 +179,7 @@ def delete_mission():
 def get_system_status():
     try:
         system_status = manager.get_system_monitor_info()
+        print(system_status)
         return jsonify({"message": "Get system status successfully", "data": system_status}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

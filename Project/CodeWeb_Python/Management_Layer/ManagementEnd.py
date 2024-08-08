@@ -1,6 +1,5 @@
 import os
 import sys
-import concurrent.futures
 import ctypes
 import inspect
 import threading
@@ -9,7 +8,7 @@ class ManagementEnd:
     def __init__(self):
         print("---管理层启动---")
         
-        self._request_admin_privileges()
+        # self._request_admin_privileges()
         
         # 添加项目根目录到临时环境变量
         sys.path.append(
@@ -30,9 +29,7 @@ class ManagementEnd:
         
         # 同步
         self.sync()
-        
-        # 监控系统资源
-        self._monitor_system_resources()
+    
         
     def sync(self):
         """
@@ -69,33 +66,40 @@ class ManagementEnd:
         self.strategy_manager.sync()
         return self.strategy_manager.get_registry_info(project_name)
     
-    def get_directory_tree(self):
+    def get_directory_tree(self, project_name):
         """
-        获取文件目录
+        根据项目名获取文件目录
         """
-        return self.res_manager.get_directory_tree()
+        self.res_manager.get_directory_tree()
+        print(next((item for item in list(self.res_manager.directory_tree.values())[0] if project_name in item), None))
+        return next((item for item in list(self.res_manager.directory_tree.values())[0] if project_name in item), None)
     
     def execute(self, message):
         """
         执行任务
         """
         print("--开始执行--")
+        output_data = None
+        finished_threads = []
+        def _thread_wrapper(project_name, project):
+            """
+            包装线程的执行函数，在完成后从self.threads中删除线程
+            """
+            nonlocal output_data
+            output_data = self.strategy_manager.execute_project(project_name, project, self.config_manager.user_config[project_name])
         
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future_to_project = {}
         for project_name, project in message.items():
-            future = executor.submit(self._thread_wrapper, project_name, project)
-            future_to_project[future] = project_name
-            # 设置线程名称
-            thread = threading.Thread(target=self._thread_wrapper, name=project_name, args=(project_name, project))
-            self.threads.append(thread)
+            thread = threading.Thread(target=_thread_wrapper, args=(project_name, project))
+            self.threads[project_name] = thread
+            thread.start()
 
-        for future in concurrent.futures.as_completed(future_to_project):
-            project_name = future_to_project[future]
-            try:
-                output_data = future.result()
-            except Exception as exc:
-                print(f"{project_name} 生成异常: {exc}")
+        for project_name, thread in self.threads.items():
+            thread.join()
+            finished_threads.append(project_name)
+            print(f"线程完成: {project_name}")
+
+        for project_name in finished_threads:
+            del self.threads[project_name]
 
         print("==所有执行完成==")
         return output_data
@@ -152,26 +156,13 @@ class ManagementEnd:
         """
         读取文件
         """
-        return self.res_manager.read_file(file_path)
+        return self.res_manager.get_file_content(file_path)
     
     def get_system_monitor_info(self):
         """
         获取系统监控信息
         """
-        return self.res_manager.monitor_queue.get(timeout=1.5)
-    
-    def _thread_wrapper(self, project_name, project):
-        """
-        包装线程的执行函数，在完成后从self.threads中删除线程
-        """
-        self.strategy_manager.execute_project(project_name, project, self.config_manager.user_config[project_name])
-        del self.threads[project_name]
-    
-    def _monitor_system_resources(self):
-        """
-        启动系统资源监控线程
-        """
-        self.threads['monitor'] = self.res_manager.monitor_system_resources()
+        return self.res_manager.get_system_resources()   
     
     def _request_admin_privileges(self):
         """
@@ -206,4 +197,4 @@ class ManagementEnd:
 
 if __name__ == '__main__':
     m = ManagementEnd()
-    m.get_system_monitor_info()
+    print(m.get_directory_tree("test_project"))

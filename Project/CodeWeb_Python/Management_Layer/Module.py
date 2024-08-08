@@ -44,7 +44,7 @@ class StrategyModule:
                 cls._registry[project] = {}
                 cls.registry_info[project] = {}
             cls._registry[project][name] = {"func": func, "signature": signature, "return_annotation": return_annotation}
-            cls.registry_info[project][name] = {"argus": [{"argu_name":param.name, "argus_annotation":str(param.annotation), "argus_default":str(param.default)} for param in signature.parameters.values()], "return_annotation": return_annotation, "comment": comment}
+            cls.registry_info[project][name] = {"argus": [{"argu_name":param.name, "argu_annotation":str(param.annotation), "argu_default":str(param.default)} for param in signature.parameters.values()], "return_annotation": str(return_annotation), "comment": comment}
             return func
         return decorator
         
@@ -89,10 +89,11 @@ class StrategyModule:
         print(f"--开始执行项目 {project_name}--")
         for task_name, task in project.items():
             print(f"--执行任务 {task_name}")
-            output_data_dict = self._execute_task(project_name, task, config)
+            output_data = self._execute_task(project_name, task, config)
             print(f"==任务 {task_name} 执行完成==")
         print(f"==项目 {project_name} 执行完成==")
-        return output_data_dict
+        print(output_data)
+        return output_data
     
     # 执行任务
     def _execute_task(self,project_name, task, config):
@@ -116,6 +117,7 @@ class StrategyModule:
                 func_name = strategy["FUNC"]
                 kwargs = {}
                 for args_name, args_value in strategy["ARGS"].items():
+                    print(args_value)
                     pre_strategy_id, _, output_key = args_value.rpartition('_')
                     if output_key == "OUTPUT":
                         kwargs[args_name] = pre_output[pre_strategy_id]
@@ -234,7 +236,7 @@ class ResourceModule:
     
     def get_file_content(self, file_path):
         file_path = self._get_absolute_path(file_path)
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             return f.read()
     
     def restore_paths_from_dict(self, folder_dict, parent_path=''):
@@ -266,21 +268,6 @@ class ResourceModule:
                         if re.search(r'@\w+\.register\([^)]*\)', f.read()):
                             register_file.append(filepath)
         return register_file
-        
-    def monitor_system_resources(self, time_interval=1):
-        """
-        在新线程中监控系统资源。
-        """
-        def monitor(time_interval):
-            while True:
-                resources = self.get_system_resources()
-                self.monitor_queue.put(resources)
-                time.sleep(time_interval)
-
-        monitor_thread = threading.Thread(target=monitor,args=(time_interval,))
-        monitor_thread.daemon = True  # 设置为守护线程
-        monitor_thread.start()
-        return monitor_thread
     
     def get_system_resources(self):
         """
@@ -290,25 +277,31 @@ class ResourceModule:
         cpu_load = [self.compute.Hardware[0].Sensors[a].get_Value() for a in range(len(self.compute.Hardware[0].Sensors)) if '/load' in str(self.compute.Hardware[0].Sensors[a].Identifier) and self.compute.Hardware[0].Sensors[a].get_Value() is not None]
         cpu_temp = [self.compute.Hardware[0].Sensors[a].get_Value() for a in range(len(self.compute.Hardware[0].Sensors)) if '/temperature' in str(self.compute.Hardware[0].Sensors[a].Identifier) and self.compute.Hardware[0].Sensors[a].get_Value() is not None]
         cpu_power = [self.compute.Hardware[0].Sensors[a].get_Value() for a in range(len(self.compute.Hardware[0].Sensors)) if '/power' in str(self.compute.Hardware[0].Sensors[a].Identifier) and self.compute.Hardware[0].Sensors[a].get_Value() is not None]
-        cpu_load = sum(cpu_load) / len(cpu_load) if len(cpu_load) > 0 else None
-        cpu_temp = sum(cpu_temp) / len(cpu_temp) if len(cpu_temp) > 0 else None
-        cpu_power = sum(cpu_power) / len(cpu_power) if len(cpu_power) > 0 else None
+        
+        cpu_load = round(sum(cpu_load) / len(cpu_load),2) if len(cpu_load) > 0 else None
+        cpu_temp = round(sum(cpu_temp) / len(cpu_temp),2) if len(cpu_temp) > 0 else None
+        cpu_power = round(sum(cpu_power) / len(cpu_power),2) if len(cpu_power) > 0 else None
 
         # RAM
         ram_load = [self.compute.Hardware[1].Sensors[a].get_Value() for a in range(len(self.compute.Hardware[1].Sensors)) if '/load' in str(self.compute.Hardware[1].Sensors[a].Identifier) and self.compute.Hardware[1].Sensors[a].get_Value() is not None]
-        ram_load = sum(ram_load) / len(ram_load) if len(ram_load) > 0 else None
+        
+        ram_load = round(sum(ram_load) / len(ram_load),2)if len(ram_load) > 0 else None
 
         # GPU
         gpu_load = [self.compute.Hardware[2].Sensors[a].get_Value() for a in range(len(self.compute.Hardware[2].Sensors)) if '/load' in str(self.compute.Hardware[2].Sensors[a].Identifier) and self.compute.Hardware[2].Sensors[a].get_Value() is not None]
         gpu_temp = [self.compute.Hardware[2].Sensors[a].get_Value() for a in range(len(self.compute.Hardware[2].Sensors)) if '/temperature' in str(self.compute.Hardware[2].Sensors[a].Identifier) and self.compute.Hardware[2].Sensors[a].get_Value() is not None]
         gpu_power = [self.compute.Hardware[2].Sensors[a].get_Value() for a in range(len(self.compute.Hardware[2].Sensors)) if '/power' in str(self.compute.Hardware[2].Sensors[a].Identifier) and self.compute.Hardware[2].Sensors[a].get_Value() is not None]
-        gpu_load = sum(gpu_load) / len(gpu_load) if len(gpu_load) > 0 else None
-        gpu_temp = sum(gpu_temp) / len(gpu_temp) if len(gpu_temp) > 0 else None
-        gpu_power = sum(gpu_power) / len(gpu_power) if len(gpu_power) > 0 else None
+        
+        gpu_load = round(sum(gpu_load) / len(gpu_load),2) if len(gpu_load) > 0 else None
+        gpu_temp = round(sum(gpu_temp) / len(gpu_temp),2) if len(gpu_temp) > 0 else None
+        gpu_power = round(sum(gpu_power) / len(gpu_power),2) if len(gpu_power) > 0 else None
 
         # HDD
         hdd_load = [self.compute.Hardware[3].Sensors[a].get_Value() for a in range(len(self.compute.Hardware[3].Sensors)) if '/load' in str(self.compute.Hardware[3].Sensors[a].Identifier) and self.compute.Hardware[3].Sensors[a].get_Value() is not None]
-        hdd_load = sum(hdd_load) / len(hdd_load) if len(hdd_load) > 0 else None
+        hdd_load = round(sum(hdd_load) / len(hdd_load),2) if len(hdd_load) > 0 else None
+        
+        for header in self.compute.Hardware:
+            header.Update()
         
         return {
             "CPU": {
@@ -331,8 +324,10 @@ class ResourceModule:
     
     def _get_absolute_path(self, relative_path):
         if relative_path:
-            if relative_path.startswith(self.root_project):
-                    relative_path = relative_path[len(self.root_project):].lstrip(os.sep)
+            if relative_path.startswith('/'):
+                relative_path = relative_path[1:]
+            print(self.project_root)
+            print(os.path.normpath(os.path.join(self.project_root, relative_path)))
             return os.path.normpath(os.path.join(self.project_root, relative_path))
         return None
 

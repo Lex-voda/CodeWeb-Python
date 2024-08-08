@@ -1,5 +1,0 @@
-Flask==2.2.2
-Flask_Cors==4.0.1
-Flask_SocketIO==5.3.6
-psycopg2==2.9.9
-pythonnet==3.0.3
