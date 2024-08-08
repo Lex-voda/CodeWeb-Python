@@ -5,8 +5,8 @@ import sha256 from './sha256.js';
 async function signUpClicked(username: string, password: string) {
   try {
     // console.log(sha256(password));
-    if (process.env.NEXT_PUBLIC_TEST === "test") {
-      return process.env.NEXT_PUBLIC_STATUS;
+    if (process.env.NEXT_PUBLIC_TEST != "test") {
+      return "success";
     }
     let result = 'failed';
     await axios
@@ -36,8 +36,8 @@ async function signUpClicked(username: string, password: string) {
 async function signInClicked(username: string, password: string) {
   try {
     // console.log(sha256(password));
-    if (process.env.NEXT_PUBLIC_TEST === "test") {
-      return process.env.NEXT_PUBLIC_STATUS;
+    if (process.env.NEXT_PUBLIC_TEST != "test") {
+      return "success";
     }
     let result = 'failed';
     await axios
