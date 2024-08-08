@@ -205,6 +205,7 @@ export default function MainPage({ projectName }: { projectName: string }) {
 
       // 监听任务执行结果
       socket.on("mission_response", (data) => {
+        console.log("%cSOCKET", "color: violet; font-size:30px", data);
         if (data.message) setMessageList([...messageList, ...data.message]);
         // if (data.status)
         //   for (let i = 0; i < Object.keys(data.status).length; i++) {
@@ -216,7 +217,7 @@ export default function MainPage({ projectName }: { projectName: string }) {
         //   }
         if (typeof data.status === "boolean") {
           if (data.status === false) {
-            setLastMission(currentMission);
+            if (currentMission != "") setLastMission(currentMission);
             setCurrentMission("");
           }
         }

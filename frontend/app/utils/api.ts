@@ -92,11 +92,11 @@ interface putFileContentReq {
   content: string;
 }
 
-const putFileContent = async (project_name: string, content: string) =>
+const putFileContent = async (file_path: string, content: string) =>
   await instance.put<putFileContentReq, AxiosResponse<Partial<commonRes>>>(
     `/file`,
     { content },
-    { params: { project_name } }
+    { params: { file_path } }
   );
 
 const deleteMission = async (project_name: string) =>

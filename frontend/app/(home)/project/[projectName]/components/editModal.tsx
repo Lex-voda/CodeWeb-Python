@@ -32,7 +32,7 @@ export default function EditModal({
       success("修改文件内容成功！");
     } else {
       if (contentRef.current)
-        API.putFileContent(projectName, contentRef.current?.innerText).then(
+        API.putFileContent(filePath, contentRef.current?.innerText).then(
           (res) => {
             if (res.status === 200) {
               if (res.data.message)
