@@ -216,6 +216,7 @@ export default function MainPage({ projectName }: { projectName: string }) {
         //   }
         if (typeof data.status === "boolean") {
           if (data.status === false) {
+            setLastMission(currentMission);
             setCurrentMission("");
           }
         }
@@ -271,12 +272,14 @@ export default function MainPage({ projectName }: { projectName: string }) {
     console.log("stop mission: ", missionTable[index].name);
     if (process.env.NEXT_PUBLIC_TEST === "test") {
       setMessageList([...messageList, "test: 停止任务成功！"]);
+      setLastMission(currentMission);
       setCurrentMission("");
     } else {
       API.deleteMission(projectName).then((res) => {
         if (res.status === 200) {
           if (res.data.message)
             setMessageList([...messageList, res.data.message]);
+          setLastMission(currentMission);
           setCurrentMission("");
         } else {
           error("停止任务失败！");
@@ -287,6 +290,7 @@ export default function MainPage({ projectName }: { projectName: string }) {
 
   // 当前运行任务
   const [currentMission, setCurrentMission] = useState<string>("");
+  const [lastMission, setLastMission] = useState<string>("");
 
   // check file
   const {
@@ -424,6 +428,7 @@ export default function MainPage({ projectName }: { projectName: string }) {
                     handleStopMission={handleStopMission}
                     configTable={configTable}
                     missionResData={missionResData}
+                    lastMission={lastMission}
                   />
                 ))}
                 {/* add mission */}
