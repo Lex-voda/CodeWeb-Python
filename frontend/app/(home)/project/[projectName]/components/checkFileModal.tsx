@@ -28,6 +28,7 @@ import {
 } from "react-icons/md";
 import SingleInputModal from "./singleInputModal";
 import ConfirmModal from "./confirmModal";
+import { IoMdRefresh } from "react-icons/io";
 
 export default function CheckFileModal({
   isOpen,
@@ -244,6 +245,14 @@ export default function CheckFileModal({
                       }}
                     >
                       <MdDeleteOutline />
+                    </div>
+                    <div
+                      className="w-5 h-5 flex justify-center items-center hover:bg-[#33333333] cursor-pointer rounded-md text-lg"
+                      onClick={() => {
+                        updateRootDir();
+                      }}
+                    >
+                      <IoMdRefresh />
                     </div>
                     <div
                       className="w-5 h-5 flex justify-center items-center hover:bg-[#33333333] cursor-pointer rounded-md text-lg"
