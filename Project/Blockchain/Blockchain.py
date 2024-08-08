@@ -8,9 +8,6 @@ from scipy.stats import percentileofscore
 import os
 import base64
 from io import BytesIO
-
-from Blockchain.utils import draw_2node_graph
-
 from CodeWeb_Python.api import StrategyModule as strategy
 
 @strategy.register(name="Load_Data", comment="Load data from CSV files")
@@ -119,63 +116,6 @@ def Miner_Evolution_3(miner_summaries):
     ax.set_xlabel('Period',fontsize=16)
     ax.set_ylabel('% Share of blocks mined',fontsize=16)
     ax.set_ylim(0,1)
-    
-    buf = BytesIO()
-    plt.savefig(buf, format='png')
-    buf.seek(0)
-    img_base64 = base64.b64encode(buf.read()).decode('utf-8')
-    buf.close()
-    return 'data:image/png;base64,'+img_base64
-
-@strategy.register(name="NetworkX_Graph", comment="Generate NetworkX graph")
-def NetworkX_Graph():
-    # Load the final snapshot of edges
-    miners=pd.read_csv('./data/miners_summary.csv')
-    miners['miner_id']=miners.index
-    miners_transactions=np.load('./data/miners_trans_evolution_usd.npy',allow_pickle=True)[-1]
-
-    # Add miner id and change index
-    miners['miner_id']=miners.index #Use index of sorted dataframe (ranking) as miner_id
-    miners=miners.rename(columns={"count": "no. blocks", "sum": "no. transactions","nunique": "unique tags",'max':'miner_tag'})
-
-    # Additional transformations for edge calculations
-    miners.set_index('miner',inplace=True) #Set address as index
-    miners['miner']=miners.index
-    print(miners.head())
-    
-    nodes=list(miners['miner_id'])
-    # Transform concatenation into tuple of miner ids
-    # Extract array
-    address_ex=miners_transactions[:,0] 
-    address_ex=address_ex.astype(np.str)
-
-    # Split strings into two separate lists: join_list_0 and join_list_1
-    split_ad=np.char.rpartition(address_ex,'0x')
-    split_ad_m=np.split(split_ad,[1,2],axis=1) 
-    join=np.core.defchararray.add(split_ad_m[1],split_ad_m[2])
-    join_0=np.squeeze(split_ad_m[0])
-    join_list_0=[miners.miner_id[address] for address in join_0]
-    join=np.squeeze(join)
-    join_list_1=[miners.miner_id[address] for address in join ]
-
-    # Create array of unique edges and edge_weights (undirected graph) to feed to Graph definition 
-    tuples=zip(join_list_0,join_list_1)
-    tuples_list=[(a,b) for a,b in tuples]
-    edges=[(e[0],e[1],{'value':v}) for e,v in zip(tuples_list,miners_transactions[:,1])]
-    
-    # Define Graph from a NetworkX graph object
-    G=nx.DiGraph()
-    G.add_nodes_from(nodes)
-    G.add_edges_from(edges)
-    
-    fig=plt.figure(figsize=(18,18))
-
-    # Define lists for top 10 miners 'nodes_1' and the rest 'nodes_2'. Remember that the DataFrame them 
-    # in order of mining power. 
-    nodes_1=miners['miner_id'][:10].tolist()
-    nodes_2=miners['miner_id'][10:].tolist()
-
-    fig,trimmed_edges = draw_2node_graph(fig,G,nodes_1,nodes_2,G.edges(data=True),'value',111,edge_type='',max_sample=2000)
     
     buf = BytesIO()
     plt.savefig(buf, format='png')

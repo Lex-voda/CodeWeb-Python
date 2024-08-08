@@ -1,3 +1,4 @@
 {
-    "data_path":"./data/miner_volume"
+    "miner_volume":"./data/miner_volume",
+    "miners_summary": "./data/miners_summary.csv"
 }

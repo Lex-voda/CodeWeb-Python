@@ -155,7 +155,7 @@ def handle_send_mission(data):
         
         sys.stdout = sys.__stdout__
         print("任务执行完成")
-        emit('mission_response', {"message": custom_output.get_value(), "data": response,"status":False})
+        emit('mission_response', {"message": custom_output.get_value(), "data": response,"status":True})
         
     except Exception as e:
         emit('mission_response', {"error": str(e)})

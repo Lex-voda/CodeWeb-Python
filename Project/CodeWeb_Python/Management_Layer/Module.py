@@ -107,9 +107,9 @@ class StrategyModule:
             kwargs = {}
             for args_name, args_value in strategy["ARGS"].items():
                 kwargs[args_name] = config[args_value]
-            print(f'--执行策略 {id}，策略函数为 {func_name}，参数配置为 {strategy["ARGS"]}，参数为 {kwargs}')
+            # print(f'--执行策略 {id}，策略函数为 {func_name}，参数配置为 {strategy["ARGS"]}，参数为 {kwargs}')
             iter = self.__execute_strategy(project_name, func_name, **kwargs)
-            print("==得到迭代器对象")
+            # print("==得到迭代器对象")
             start = 1
         for i in range(len(iter)):
             for strategy in task["STRATEGY_QUEUE"][start:]:
@@ -125,9 +125,9 @@ class StrategyModule:
                         kwargs[args_name] = iter[i]
                     else:
                         kwargs[args_name] = config[args_value]
-                print(f'--执行策略 {id}，策略函数为 {func_name}，参数配置为 {strategy["ARGS"]}，参数为 {kwargs}')
+                # print(f'--执行策略 {id}，策略函数为 {func_name}，参数配置为 {strategy["ARGS"]}，参数为 {kwargs}')
                 pre_output[id] = self.__execute_strategy(project_name, func_name, **kwargs)
-                
+        
         return {strategy_id: pre_output.get(strategy_id) for strategy_id in task['GET_OUTPUT']}
 
     # 执行策略

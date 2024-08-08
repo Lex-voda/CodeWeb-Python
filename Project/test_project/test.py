@@ -20,18 +20,21 @@ class IterNum:
 
 @Strategy.register(name="add", comment="Add two numbers")
 def add_numbers(a, b):
+    print("计算：", a, "+", b, "=", a + b)
     return a + b
 
 @Strategy.register(name="sub", comment="Subtract two numbers")
 def subtract_numbers(a, b):
+    print("计算：", a, "-", b, "=", a - b)
     return a - b
 
 @Strategy.register(name="iter", comment="get an iterator")
 def get_iter(num):
+    print("迭代长度为：", num)
     return IterNum(num)
 
-@Strategy.register(name="image_to_base64", comment="Convert image to base64")
-def image_to_base64(image_path):
+@Strategy.register(name="image_to_base64", comment="show an image")
+def show_image(image_path):
     """
     读取图片文件并将其转换为Base64编码的字符串
 
