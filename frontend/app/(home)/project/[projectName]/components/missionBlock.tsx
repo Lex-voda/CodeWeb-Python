@@ -36,6 +36,7 @@ export default function MissionBlock({
   handleStopMission,
   configTable,
   missionResData,
+  lastMission,
 }: {
   missionIndex: number;
   mission: Mission;
@@ -48,6 +49,7 @@ export default function MissionBlock({
   handleStopMission: (index: number) => void;
   configTable: any;
   missionResData: any;
+  lastMission: string;
 }) {
   const { colorMap, updateColorMap, randomColors } =
     useContext(ColorMapContext);
@@ -292,7 +294,8 @@ export default function MissionBlock({
                     {arg}
                   </div>
                 ))}
-                {currentMission === mission.name &&
+                {(currentMission === mission.name ||
+                  (currentMission === "" && lastMission === mission.name)) &&
                   missionResData &&
                   missionResData[strategy.ID] && (
                     <div

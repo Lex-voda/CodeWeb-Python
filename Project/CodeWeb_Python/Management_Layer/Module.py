@@ -89,11 +89,10 @@ class StrategyModule:
         print(f"--开始执行项目 {project_name}--")
         for task_name, task in project.items():
             print(f"--执行任务 {task_name}")
-            output_data = self._execute_task(project_name, task, config)
+            output_data_dict = self._execute_task(project_name, task, config)
             print(f"==任务 {task_name} 执行完成==")
         print(f"==项目 {project_name} 执行完成==")
-        print(output_data)
-        return output_data
+        return output_data_dict
     
     # 执行任务
     def _execute_task(self,project_name, task, config):

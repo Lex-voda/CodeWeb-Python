@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 import sys
+from flask_socketio import SocketIO, emit
+import sys
 
 from ManagementEnd import ManagementEnd
 from utils import CustomOutputStream
@@ -10,6 +12,7 @@ app = Flask(__name__)
 cors = CORS(app, origins="*")
 socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
 
+manager = ManagementEnd()
 manager = ManagementEnd()
 
 # 请求同步策略注册表
@@ -186,4 +189,5 @@ def get_system_status():
 
 
 if __name__ == "__main__":
+    socketio.run(app, host="localhost", port=8000, debug=True)
     socketio.run(app, host="localhost", port=8000, debug=True)

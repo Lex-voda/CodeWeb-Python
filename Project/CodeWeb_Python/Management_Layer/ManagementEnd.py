@@ -3,6 +3,8 @@ import sys
 import ctypes
 import inspect
 import threading
+import inspect
+import threading
 
 class ManagementEnd:
     def __init__(self):
@@ -16,12 +18,14 @@ class ManagementEnd:
                 os.path.dirname(
                     os.path.dirname(os.path.abspath(__file__)))))
         from CodeWeb_Python.api import StrategyModule, ResourceModule, ConfigModule, DBManager
+        from CodeWeb_Python.api import StrategyModule, ResourceModule, ConfigModule, DBManager
         
         self.threads = {}   # 线程表
         self.output_dict = {}   # 输出表
         self.project_root = None   # 项目根目录绝对路径
         self.projects = []  # 项目集
         
+        self.res_manager = ResourceModule(sys_name="CodeWeb_Python") # 资源管理器
         self.res_manager = ResourceModule(sys_name="CodeWeb_Python") # 资源管理器
         self.strategy_manager = StrategyModule(self.res_manager)    # 策略管理器
         self.config_manager = ConfigModule(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'sys_config.json'))     # 配置管理器
@@ -103,12 +107,14 @@ class ManagementEnd:
 
         print("==所有执行完成==")
         return output_data
+        return output_data
     
     def remove_thread(self, project_name):
         """
         根据名字删除线程
         """
         if project_name in self.threads:
+            self._stop_thread(self.threads[project_name])
             self._stop_thread(self.threads[project_name])
             del self.threads[project_name]
             print(f"线程 {project_name} 已删除")
@@ -126,6 +132,8 @@ class ManagementEnd:
         同步用户配置文件
         """
         user_config_path = self.db_manager.get_project_config_path(project_name)
+        print(project_name, user_config_path)
+        user_config_path = os.path.join(self.project_root, project_name, user_config_path) if user_config_path else None
         print(project_name, user_config_path)
         user_config_path = os.path.join(self.project_root, project_name, user_config_path) if user_config_path else None
         self.config_manager.sync(project_name, user_config_path)

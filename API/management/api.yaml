@@ -1,8 +1,8 @@
 openapi: 3.0.0
 info:
-  title: 管理控制 API
-  version: 0.9.8
-  description: 为高级模型用户设计的 CV 模型应用管理平台 API
+  title: ManagementEnd API
+  version: 1.0.0
+  description: 系统ManagementEnd组件的API
 servers:
   - url: https://api.managementend.example.com/v1
 tags:
@@ -24,6 +24,7 @@ paths:
       summary: 请求同步策略注册表
       parameters:
       - name: project_name
+        in: query
         required: true
         schema:
             type: string
@@ -36,6 +37,10 @@ paths:
                 $ref: '#/components/schemas/StrategyRegistryResponse'
         '501':
           description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /file/directory:
     get:
       tags:
@@ -43,6 +48,7 @@ paths:
       summary: 请求同步项目文件目录
       parameters:
       - name: project_name
+        in: query
         required: true
         schema:
             type: string
@@ -55,6 +61,10 @@ paths:
                 $ref: '#/components/schemas/DirectoryResponse'
         '501':
           description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /file/project-list:
     get:
       tags:
@@ -69,6 +79,10 @@ paths:
                 $ref: '#/components/schemas/ProjectListResponse'
         '501':
           description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /file/config:
     parameters:
       - name: project_name
@@ -90,6 +104,10 @@ paths:
                 $ref: '#/components/schemas/ConfigurationResponse'
         '501':
           description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     put:
       tags:
         - 配置
@@ -103,8 +121,13 @@ paths:
       responses:
         '200':
           description: SuccessResponse
+
         '500':
           description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /file:
     parameters:
       - name: file_path
@@ -120,8 +143,16 @@ paths:
       responses:
         '200':
           description: SuccessResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
         '500':
           description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     put:
       tags:
         - 文件操作
@@ -135,10 +166,22 @@ paths:
       responses:
         '200':
           description: SuccessResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
         '501':
           description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     get:
       tags:
         - 文件操作
@@ -152,8 +195,16 @@ paths:
                 $ref: '#/components/schemas/FileContentResponse'
         '404':
           description: NotFoundResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     patch:
       tags:
         - 文件操作
@@ -168,8 +219,16 @@ paths:
       responses:
         '200':
           description: SuccessResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
         '500':
           description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
       tags:
         - 文件操作
@@ -177,27 +236,17 @@ paths:
       responses:
         '200':
           description: SuccessResponse
-        '500':
-          description: ErrorResponse
-  /mission:
-    get:
-      tags:
-        - 任务管理
-      summary: 通过 WebSocket 连接获取任务状态
-      parameters:
-      - name: project_name
-        required: true
-        schema:
-            type: string
-      responses:
-        '200':
-          description: 成功获取任务状态
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MissionStatusResponse'
+                $ref: '#/components/schemas/SuccessResponse'
         '500':
           description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /mission:
     post:
       tags:
         - 任务管理
@@ -217,21 +266,33 @@ paths:
                 $ref: '#/components/schemas/MissionResponse'
         '500':
           description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
       tags:
         - 任务管理
       summary: 停止运行中的任务或删除等待中的任务
       parameters:
         - in: query
-          name: mission_name
+          name: project_name
           schema:
             type: string
           required: true
       responses:
         '200':
           description: SuccessResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
         '500':
           description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /monitor:
     get:
       tags:
@@ -246,6 +307,10 @@ paths:
                 $ref: '#/components/schemas/SystemStatusResponse'
         '500':
           description: ErrorResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     StrategyRegistryResponse:
@@ -345,7 +410,9 @@ components:
         message:
           type: string
         status:
-          type: string
+          type: object
+          additionalProperties:
+            type: boolean
     MissionRequest:
       type: object
       additionalProperties:
@@ -377,11 +444,17 @@ components:
       type: object
       properties:
         message:
-          type: string
+          type: array
+          items:
+            type: string
+        status:
+          type: object
+          additionalProperties:
+            type: boolean
         data:
           type: object
           additionalProperties:
-            type: object
+            type: string
     SystemStatusResponse:
       type: object
       properties:
@@ -418,3 +491,15 @@ components:
               properties:
                 load:
                   type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    
+    SuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
