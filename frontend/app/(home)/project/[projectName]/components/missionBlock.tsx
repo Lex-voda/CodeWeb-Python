@@ -294,8 +294,7 @@ export default function MissionBlock({
                     {arg}
                   </div>
                 ))}
-                {(currentMission === mission.name ||
-                  (currentMission === "" && lastMission === mission.name)) &&
+                {lastMission === mission.name &&
                   missionResData &&
                   missionResData[strategy.ID] && (
                     <div
