@@ -206,6 +206,7 @@ export default function MainPage({ projectName }: { projectName: string }) {
       // 监听任务执行结果
       socket.on("mission_response", (data) => {
         console.log("%cSOCKET", "color: violet; font-size:30px", data);
+        console.log("%cCurrent Mission", "color: #91bef0; font-size:30px", currentMission);
         if (data.message) setMessageList([...messageList, ...data.message]);
         // if (data.status)
         //   for (let i = 0; i < Object.keys(data.status).length; i++) {
@@ -226,7 +227,7 @@ export default function MainPage({ projectName }: { projectName: string }) {
 
       // 清理事件监听器
       return () => {
-        socket.off("mission_status_response");
+        // socket.off("mission_status_response");
         socket.off("mission_response");
       };
     }
