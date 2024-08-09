@@ -205,8 +205,7 @@ export default function MainPage({ projectName }: { projectName: string }) {
 
       // 监听任务执行结果
       socket.on("mission_response", (data) => {
-        console.log("%cSOCKET", "color: violet; font-size:30px", data);
-        console.log("%cCurrent Mission", "color: #91bef0; font-size:30px", currentMission);
+        // console.log("%cSOCKET", "color: violet; font-size:30px", data);
         if (data.message) setMessageList([...messageList, ...data.message]);
         // if (data.status)
         //   for (let i = 0; i < Object.keys(data.status).length; i++) {
@@ -218,7 +217,6 @@ export default function MainPage({ projectName }: { projectName: string }) {
         //   }
         if (typeof data.status === "boolean") {
           if (data.status === false) {
-            if (currentMission != "") setLastMission(currentMission);
             setCurrentMission("");
           }
         }
@@ -257,10 +255,12 @@ export default function MainPage({ projectName }: { projectName: string }) {
     if (process.env.NEXT_PUBLIC_TEST === "test") {
       setMessageList([...messageList, "test: 开始任务成功！"]);
       setCurrentMission(missionTable[index].name);
+      setLastMission(missionTable[index].name);
     } else {
       if (socket) {
         socket.emit("send_mission", missionData);
         setCurrentMission(missionTable[index].name);
+        setLastMission(missionTable[index].name);
       }
     }
   };
